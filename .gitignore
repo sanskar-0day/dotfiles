@@ -1,2 +1,22 @@
 brave-profile.tar.gz
 Brave-Browser/
+# Secrets
+.secrets
+secrets
+*.secret
+*_secret
+
+# API keys
+.env
+.env.*
+!.env.example
+
+# SSH keys
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# Passwords
+*password*
+*token*

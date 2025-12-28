@@ -1,0 +1,90 @@
+# i3 config - Modern & Beautiful
+
+# Mod key (Mod4 = Super/Windows key)
+set $mod Mod4
+
+# Font
+font pango:JetBrains Mono 10
+
+# Colors (Nord theme)
+set $bg       #2e3440
+set $fg       #d8dee9
+set $cyan     #88c0d0
+set $blue     #5e81ac
+set $red      #bf616a
+set $green    #a3be8c
+
+# Window colors          border  bg      text    indicator
+client.focused           $blue   $blue   $fg     $cyan
+client.unfocused         $bg     $bg     $fg     $bg
+client.focused_inactive  $bg     $bg     $fg     $bg
+
+# Gaps
+gaps inner 10
+gaps outer 5
+smart_gaps on
+
+# Borders
+default_border pixel 2
+default_floating_border pixel 2
+
+# Keybindings
+bindsym $mod+Return exec alacritty  # Terminal
+bindsym $mod+d exec rofi -show drun # App launcher
+bindsym $mod+Shift+q kill           # Kill window
+
+# Vim-style movement
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# Move windows
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
+
+# Workspaces
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+
+# Move to workspace
+bindsym $mod+Shift+1 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws4
+
+# Reload/restart
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+r restart
+
+# Screenshot
+bindsym Print exec flameshot gui
+
+# Autostart
+exec_always --no-startup-id picom -b  # Compositor for transparency
+exec_always --no-startup-id feh --bg-scale ~/Pictures/wallpaper.jpg
+exec_always --no-startup-id ~/.config/polybar/launch.sh  # Status bar
+
+# Bar (or use polybar instead)
+bar {
+    status_command i3status
+    position top
+    colors {
+        background $bg
+        statusline $fg
+        separator  $cyan
+        
+        focused_workspace  $blue $blue $fg
+        active_workspace   $bg   $bg   $fg
+        inactive_workspace $bg   $bg   $fg
+    }
+}
