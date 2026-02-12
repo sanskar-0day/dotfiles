@@ -1,22 +1,22 @@
-brave-profile.tar.gz
-Brave-Browser/
-# Secrets
-.secrets
-secrets
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Secrets — never commit
 *.secret
-*_secret
-
-# API keys
-.env
-.env.*
-!.env.example
-
-# SSH keys
-*.pem
 *.key
-id_rsa
-id_ed25519
+*.pem
 
-# Passwords
-*password*
-*token*
+# Neovim plugin cache (managed by lazy.nvim)
+nvim/.config/nvim/lazy-lock.json
+
+# Wallpapers (large files, user-managed)
+wallpapers/
+.reference/

@@ -1,0 +1,10 @@
+[Unit]
+Description=Auto-update system packages and Flatpak apps
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'apt-get update -qq && apt-get upgrade -y -qq && flatpak update -y'
+StandardOutput=journal
+StandardError=journal

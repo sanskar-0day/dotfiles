@@ -1,0 +1,231 @@
+{
+    "layer": "top",
+    "position": "top",
+    "spacing": 4,
+    "height": 34,
+    "margin-top": 5,
+    "margin-bottom": 0,
+    "margin-left": 8,
+    "margin-right": 8,
+    "fixed-center": true,
+    "exclusive": true,
+    "reload_style_on_change": true,
+    // ═══════════════════════════════════════════════════════════════
+    // MODULE LAYOUT
+    // ═══════════════════════════════════════════════════════════════
+    "modules-left": [
+        "custom/launcher",
+        "hyprland/workspaces",
+        "hyprland/window"
+    ],
+    "modules-center": [
+        "clock"
+    ],
+    "modules-right": [
+        "cpu",
+        "memory",
+        "temperature",
+        "custom/separator",
+        "pulseaudio",
+        "network",
+        "battery",
+        "custom/separator-2",
+        "tray",
+        "custom/power"
+    ],
+    // ═══════════════════════════════════════════════════════════════
+    // SEPARATORS
+    // ═══════════════════════════════════════════════════════════════
+    "custom/separator": {
+        "format": "│",
+        "tooltip": false
+    },
+    "custom/separator-2": {
+        "format": "│",
+        "tooltip": false
+    },
+    // ═══════════════════════════════════════════════════════════════
+    // LEFT MODULES
+    // ═══════════════════════════════════════════════════════════════
+    "custom/launcher": {
+        "format": "󰣇",
+        "tooltip-format": "App Launcher\n\nLMB: Application Menu",
+        "on-click": "wofi --show drun"
+    },
+    "hyprland/workspaces": {
+        "format": "{icon}",
+        "format-icons": {
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "default": "●"
+        },
+        "on-click": "activate",
+        "sort-by-number": true,
+        "all-outputs": true,
+        "on-scroll-up": "hyprctl dispatch workspace e-1",
+        "on-scroll-down": "hyprctl dispatch workspace e+1"
+    },
+    "hyprland/window": {
+        "format": "{title}",
+        "max-length": 40,
+        "separate-outputs": true,
+        "icon": true,
+        "icon-size": 16,
+        "rewrite": {
+            "(.*) — Mozilla Firefox": "󰈹 Firefox",
+            "(.*)kitty": " Terminal",
+            "": "󰇄 Desktop"
+        }
+    },
+    // ═══════════════════════════════════════════════════════════════
+    // CENTER MODULES
+    // ═══════════════════════════════════════════════════════════════
+    "clock": {
+        "format": " {:%I:%M %p}",
+        "format-alt": " {:%A, %d %B %Y  •  %I:%M:%S %p}",
+        "tooltip-format": "<big>{:%A, %d %B %Y}</big>\n<tt><small>{calendar}</small></tt>",
+        "interval": 1,
+        "calendar": {
+            "mode": "year",
+            "mode-mon-col": 3,
+            "weeks-pos": "right",
+            "on-scroll": 1,
+            "format": {
+                "months": "<span color='#cba6f7'><b>{}</b></span>",
+                "days": "<span color='#cdd6f4'><b>{}</b></span>",
+                "weeks": "<span color='#89b4fa'><b>W{}</b></span>",
+                "weekdays": "<span color='#f9e2af'><b>{}</b></span>",
+                "today": "<span color='#a6e3a1'><b><u>{}</u></b></span>"
+            }
+        },
+        "actions": {
+            "on-click-right": "mode",
+            "on-scroll-up": "shift_up",
+            "on-scroll-down": "shift_down"
+        }
+    },
+    // ═══════════════════════════════════════════════════════════════
+    // RIGHT MODULES — Hardware Stats
+    // ═══════════════════════════════════════════════════════════════
+    "cpu": {
+        "format": " {usage}%",
+        "interval": 2,
+        "tooltip-format": "CPU Usage: {usage}%\nAvg Frequency: {avg_frequency} GHz",
+        "on-click": "kitty --class htop -e htop",
+        "states": {
+            "warning": 60,
+            "critical": 80
+        }
+    },
+    "memory": {
+        "format": "󰍛 {percentage}%",
+        "format-alt": "󰍛 {used:0.1f}G",
+        "interval": 3,
+        "tooltip-format": "RAM: {used:0.2f} GiB / {total:0.2f} GiB ({percentage}%)\nSwap: {swapUsed:0.2f} GiB / {swapTotal:0.2f} GiB",
+        "states": {
+            "warning": 70,
+            "critical": 85
+        }
+    },
+    "temperature": {
+        "format": "{icon} {temperatureC}°",
+        "format-icons": [
+            "󱃃",
+            "󰔏",
+            "󱃂"
+        ],
+        "critical-threshold": 75,
+        "format-critical": "󰸁 {temperatureC}°",
+        "tooltip-format": "Temperature: {temperatureC}°C / {temperatureF}°F",
+        "interval": 3
+    },
+    // ═══════════════════════════════════════════════════════════════
+    // RIGHT MODULES — Connectivity
+    // ═══════════════════════════════════════════════════════════════
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": "󰖁 muted",
+        "format-bluetooth": "󰂰 {volume}%",
+        "format-icons": {
+            "headphone": "󰋋",
+            "hands-free": "󰋎",
+            "headset": "󰋎",
+            "default": [
+                "󰕿",
+                "󰖀",
+                "󰕾"
+            ]
+        },
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%+",
+        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-",
+        "tooltip-format": "{desc}\nVolume: {volume}%\n\nScroll: Adjust Volume\nClick: Mute Toggle",
+        "scroll-step": 5,
+        "max-volume": 150
+    },
+    "network": {
+        "format-wifi": "{icon} {signalStrength}%",
+        "format-ethernet": "󰈀 {ipaddr}",
+        "format-linked": "󰈀 No IP",
+        "format-disconnected": "󰤭 Off",
+        "format-icons": [
+            "󰤯",
+            "󰤟",
+            "󰤢",
+            "󰤥",
+            "󰤨"
+        ],
+        "tooltip-format-wifi": " {essid}\n\nSignal: {signalStrength}%\nFrequency: {frequency} MHz\nIP: {ipaddr}/{cidr}\n\n󰕒 {bandwidthUpBytes}  󰇚 {bandwidthDownBytes}",
+        "tooltip-format-ethernet": "󰈀 {ifname}\nIP: {ipaddr}/{cidr}",
+        "tooltip-format-disconnected": "No connection",
+        "interval": 2,
+        "on-click": "nm-connection-editor"
+    },
+    "battery": {
+        "format": "{icon} {capacity}%",
+        "format-alt": "{icon} {capacity}% {power:.1f}W",
+        "format-charging": "󰂄 {capacity}% {power:.1f}W",
+        "format-plugged": "󰂄 {capacity}%",
+        "format-full": "󱟢 Full",
+        "format-icons": [
+            "󰂎",
+            "󰁺",
+            "󰁻",
+            "󰁼",
+            "󰁽",
+            "󰁾",
+            "󰁿",
+            "󰂀",
+            "󰂁",
+            "󰂂",
+            "󰁹"
+        ],
+        "interval": 5,
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+        "tooltip-format": "{timeTo}\nHealth: {health}%\nPower: {power:.2f} W"
+    },
+    // ═══════════════════════════════════════════════════════════════
+    // TRAY & POWER
+    // ═══════════════════════════════════════════════════════════════
+    "tray": {
+        "icon-size": 16,
+        "spacing": 5,
+        "show-passive-items": true
+    },
+    "custom/power": {
+        "format": "⏻",
+        "tooltip-format": "Power Menu\n\nLMB: Power Off\nRMB: Lock Screen",
+        "on-click": "systemctl poweroff",
+        "on-click-right": "hyprlock"
+    }
+}

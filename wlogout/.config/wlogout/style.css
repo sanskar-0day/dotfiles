@@ -1,0 +1,71 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Wlogout Style — Catppuccin Mocha Power Menu
+   ═══════════════════════════════════════════════════════════════════ */
+
+window {
+    font-family: "JetBrains Mono Nerd Font", monospace;
+    font-size: 14px;
+    background-color: rgba(30, 30, 46, 0.85);
+}
+
+button {
+    color: #cdd6f4;
+    background-color: rgba(49, 50, 68, 0.5);
+    border: 2px solid transparent;
+    border-radius: 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 25%;
+    margin: 8px;
+    transition: all 200ms ease-in-out;
+}
+
+button:hover {
+    background-color: rgba(137, 180, 250, 0.15);
+    border: 2px solid rgba(137, 180, 250, 0.4);
+}
+
+button:focus {
+    background-color: rgba(137, 180, 250, 0.2);
+    border: 2px solid #89b4fa;
+}
+
+#lock {
+    background-image: image(url("/usr/share/wlogout/icons/lock.png"));
+}
+
+#lock:hover {
+    border-color: #89b4fa;
+}
+
+#logout {
+    background-image: image(url("/usr/share/wlogout/icons/logout.png"));
+}
+
+#logout:hover {
+    border-color: #a6e3a1;
+}
+
+#suspend {
+    background-image: image(url("/usr/share/wlogout/icons/suspend.png"));
+}
+
+#suspend:hover {
+    border-color: #f9e2af;
+}
+
+#shutdown {
+    background-image: image(url("/usr/share/wlogout/icons/shutdown.png"));
+}
+
+#shutdown:hover {
+    border-color: #f38ba8;
+}
+
+#reboot {
+    background-image: image(url("/usr/share/wlogout/icons/reboot.png"));
+}
+
+#reboot:hover {
+    border-color: #fab387;
+}

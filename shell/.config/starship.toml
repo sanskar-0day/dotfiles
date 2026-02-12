@@ -1,0 +1,81 @@
+# ═══════════════════════════════════════════════════════════════════
+# Starship Prompt — Minimal, Fast, Informative
+# ═══════════════════════════════════════════════════════════════════
+
+# Prompt format
+format = """
+$container\
+$directory\
+$git_branch\
+$git_status\
+$python\
+$nodejs\
+$rust\
+$golang\
+$cmd_duration\
+$line_break\
+$character"""
+
+# Short scan timeout for snappy prompt
+scan_timeout = 10
+command_timeout = 500
+
+[character]
+success_symbol = "[❯](bold #89b4fa)"
+error_symbol = "[❯](bold #f38ba8)"
+vimcmd_symbol = "[❮](bold #a6e3a1)"
+
+[directory]
+style = "bold #cba6f7"
+truncation_length = 3
+truncation_symbol = "…/"
+read_only = " 󰌾"
+read_only_style = "#f38ba8"
+
+[git_branch]
+symbol = " "
+style = "bold #a6e3a1"
+format = "[$symbol$branch(:$remote_branch)]($style) "
+
+[git_status]
+style = "#f9e2af"
+format = '([$all_status$ahead_behind]($style) )'
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇡${ahead_count}⇣${behind_count}"
+modified = "!${count}"
+staged = "+${count}"
+untracked = "?${count}"
+
+[python]
+symbol = "🐍 "
+style = "#f9e2af"
+format = '[$symbol$version(\($virtualenv\))]($style) '
+
+[nodejs]
+symbol = " "
+style = "#a6e3a1"
+format = '[$symbol$version]($style) '
+
+[rust]
+symbol = "🦀 "
+style = "#fab387"
+format = '[$symbol$version]($style) '
+
+[golang]
+symbol = "🐹 "
+style = "#89b4fa"
+format = '[$symbol$version]($style) '
+
+[cmd_duration]
+min_time = 2_000
+style = "#585b70"
+format = "[$duration]($style) "
+
+[container]
+symbol = "⬡ "
+style = "bold #89b4fa"
+format = '[$symbol$name]($style) '
+
+[line_break]
+disabled = false

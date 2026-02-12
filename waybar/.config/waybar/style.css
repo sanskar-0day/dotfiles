@@ -1,0 +1,394 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Waybar Style — Premium Dark Theme
+   Inspired by dusky, using Catppuccin Mocha palette
+   
+   Key design: Separated pill-shaped bar sections with shadows,
+   Material-style container backgrounds, hover inversions
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Base Variables (Catppuccin Mocha) ──────────────────────────── */
+@define-color base #1e1e2e;
+@define-color mantle #181825;
+@define-color crust #11111b;
+@define-color surface0 #313244;
+@define-color surface1 #45475a;
+@define-color surface2 #585b70;
+@define-color overlay0 #6c7086;
+@define-color text #cdd6f4;
+@define-color subtext0 #a6adc8;
+@define-color blue #89b4fa;
+@define-color lavender #b4befe;
+@define-color mauve #cba6f7;
+@define-color green #a6e3a1;
+@define-color yellow #f9e2af;
+@define-color peach #fab387;
+@define-color red #f38ba8;
+@define-color teal #94e2d5;
+
+/* Container variants (Material-style) */
+@define-color blue_container alpha(#89b4fa, 0.15);
+@define-color mauve_container alpha(#cba6f7, 0.15);
+@define-color green_container alpha(#a6e3a1, 0.15);
+@define-color red_container alpha(#f38ba8, 0.15);
+@define-color teal_container alpha(#94e2d5, 0.15);
+@define-color peach_container alpha(#fab387, 0.15);
+@define-color yellow_container alpha(#f9e2af, 0.15);
+
+/* ── Global Reset ───────────────────────────────────────────────── */
+* {
+    font-family: "JetBrains Mono Nerd Font", "Noto Sans", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    transition: background-color 150ms ease-in-out,
+        color 150ms ease-in-out,
+        opacity 150ms ease-in-out;
+}
+
+/* ── Bar ────────────────────────────────────────────────────────── */
+window#waybar {
+    background: transparent;
+    color: @text;
+}
+
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+/* ── Separated Pill Sections ────────────────────────────────────── */
+.modules-left,
+.modules-center,
+.modules-right {
+    background-color: alpha(@base, 0.88);
+    border: 1px solid alpha(@surface1, 0.4);
+    border-radius: 12px;
+    padding: 0 6px;
+    margin: 2px 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.modules-left {
+    margin-left: 2px;
+    padding-left: 3px;
+}
+
+.modules-right {
+    margin-right: 2px;
+    padding-right: 3px;
+}
+
+/* ── Base Module Style ──────────────────────────────────────────── */
+#custom-launcher,
+#workspaces,
+#window,
+#clock,
+#cpu,
+#memory,
+#temperature,
+#pulseaudio,
+#network,
+#battery,
+#tray,
+#custom-power,
+#custom-separator,
+#custom-separator-2 {
+    padding: 0 10px;
+    margin: 2px 2px;
+    border-radius: 8px;
+    background: transparent;
+    color: @text;
+}
+
+/* ── Separators ─────────────────────────────────────────────────── */
+#custom-separator,
+#custom-separator-2 {
+    color: @overlay0;
+    font-size: 12px;
+    padding: 0 2px;
+    margin: 3px 0;
+    opacity: 0.4;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LEFT — Launcher
+   ══════════════════════════════════════════════════════════════════ */
+#custom-launcher {
+    font-size: 16px;
+    color: @blue;
+    background-color: @blue_container;
+    border-radius: 10px;
+    margin-left: 2px;
+    margin-right: 2px;
+    padding: 0 10px;
+}
+
+#custom-launcher:hover {
+    background-color: @blue;
+    color: @crust;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LEFT — Workspaces
+   ══════════════════════════════════════════════════════════════════ */
+#workspaces {
+    background-color: alpha(@surface0, 0.5);
+    padding: 0 4px;
+    border-radius: 10px;
+}
+
+#workspaces button {
+    padding: 0 3px;
+    margin: 3px 2px;
+    border-radius: 50px;
+    color: @subtext0;
+    background: transparent;
+    min-width: 22px;
+    min-height: 22px;
+    font-size: 11px;
+    font-weight: 700;
+    border: none;
+}
+
+#workspaces button:hover {
+    background-color: alpha(@surface1, 0.8);
+    color: @blue;
+}
+
+#workspaces button.active {
+    background-color: @blue;
+    color: @crust;
+    font-weight: 700;
+}
+
+#workspaces button.urgent {
+    background-color: @red;
+    color: @crust;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LEFT — Window Title
+   ══════════════════════════════════════════════════════════════════ */
+#window {
+    color: @subtext0;
+    padding: 0 12px;
+    font-size: 13px;
+    opacity: 0.9;
+    font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CENTER — Clock
+   ══════════════════════════════════════════════════════════════════ */
+#clock {
+    background-color: @mauve_container;
+    color: @mauve;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 0 14px;
+}
+
+#clock:hover {
+    background-color: @mauve;
+    color: @crust;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RIGHT — Hardware Stats (compact)
+   ══════════════════════════════════════════════════════════════════ */
+#cpu,
+#memory,
+#temperature {
+    padding: 0 5px;
+    font-size: 11px;
+    border-radius: 10px;
+}
+
+#cpu {
+    color: @teal;
+}
+
+#cpu:hover {
+    color: @crust;
+    background-color: @teal;
+}
+
+#memory {
+    color: @lavender;
+}
+
+#memory:hover {
+    color: @crust;
+    background-color: @lavender;
+}
+
+#temperature {
+    color: @subtext0;
+}
+
+/* Warning & critical states */
+#cpu.warning,
+#memory.warning {
+    color: @yellow;
+}
+
+#cpu.critical,
+#memory.critical,
+#temperature.critical {
+    color: @crust;
+    background-color: @red;
+    font-weight: 700;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RIGHT — Connectivity & Audio
+   ══════════════════════════════════════════════════════════════════ */
+#pulseaudio {
+    color: @mauve;
+    font-size: 11px;
+    padding: 0 5px;
+}
+
+#pulseaudio:hover {
+    background-color: @mauve_container;
+}
+
+#pulseaudio.muted {
+    color: @overlay0;
+    opacity: 0.5;
+}
+
+#network {
+    color: @blue;
+    font-size: 11px;
+    padding: 0 5px;
+}
+
+#network:hover {
+    background-color: @blue_container;
+}
+
+#network.disconnected {
+    color: @overlay0;
+}
+
+#network.disabled {
+    color: @red;
+    opacity: 0.6;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RIGHT — Battery
+   ══════════════════════════════════════════════════════════════════ */
+#battery {
+    color: @green;
+    font-size: 11px;
+    padding: 0 5px;
+}
+
+#battery:hover {
+    background-color: @green_container;
+}
+
+#battery.charging,
+#battery.plugged,
+#battery.full {
+    color: @teal;
+}
+
+#battery.charging:hover,
+#battery.plugged:hover {
+    background-color: @teal_container;
+}
+
+#battery.warning {
+    color: @yellow;
+}
+
+#battery.critical {
+    color: @crust;
+    background-color: @red;
+    font-weight: 700;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RIGHT — System Tray
+   ══════════════════════════════════════════════════════════════════ */
+#tray {
+    padding: 0 4px;
+    margin: 0 4px;
+}
+
+#tray>.passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray>.needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: @red_container;
+    border-radius: 8px;
+}
+
+#tray menu {
+    background-color: @base;
+    border: 2px solid @surface1;
+    border-radius: 12px;
+    padding: 8px;
+}
+
+#tray menu menuitem {
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: @text;
+}
+
+#tray menu menuitem:hover {
+    background-color: @surface0;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RIGHT — Power Button
+   ══════════════════════════════════════════════════════════════════ */
+#custom-power {
+    font-size: 14px;
+    margin-right: 2px;
+    margin-left: 3px;
+    color: @red;
+    background-color: @red_container;
+    border-radius: 8px;
+    padding: 0 8px;
+}
+
+#custom-power:hover {
+    background-color: @red;
+    color: @crust;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TOOLTIP
+   ══════════════════════════════════════════════════════════════════ */
+tooltip {
+    background-color: @base;
+    color: @text;
+    border: 2px solid @surface1;
+    border-radius: 12px;
+    padding: 8px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+tooltip label {
+    color: @text;
+    padding: 4px;
+}

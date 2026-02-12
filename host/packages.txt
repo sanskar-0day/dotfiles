@@ -1,0 +1,76 @@
+# Host packages for Debian 13 (Trixie)
+# ULTRA MINIMAL — only what MUST run on host. Everything else is in distrobox.
+# GPU drivers are installed dynamically by host/setup.sh based on detection.
+
+# ── Hyprland & Wayland (compositing MUST be on host) ──
+hyprland
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+xwayland
+waybar
+wofi
+dunst
+hyprlock
+hypridle
+hyprpaper
+wlogout
+
+# ── Terminal (needs direct GPU access on host) ──
+kitty
+
+# ── Screenshot & clipboard (Wayland protocols, host only) ──
+grim
+slurp
+wl-clipboard
+cliphist
+swappy
+
+# ── Hardware controls (kernel interfaces, host only) ──
+brightnessctl
+playerctl
+
+# ── Audio (PipeWire, kernel-level, host only) ──
+pipewire
+wireplumber
+pipewire-pulse
+pipewire-alsa
+
+# ── GPU detection (needed before driver install) ──
+pciutils
+
+# ── Containers (runs distrobox, host only) ──
+podman
+
+# ── Virtualization (KVM needs kernel module, libvirtd is a system daemon) ──
+qemu-system-x86
+libvirt-daemon-system
+ovmf
+
+# ── Login shell ──
+zsh
+
+# ── Dotfile management ──
+stow
+git
+
+# ── Polkit (auth dialogs for sudo GUI) ──
+polkit-gnome
+
+# ── Network (kernel-level) ──
+network-manager
+wireless-regdb
+iw
+
+# ── Firmware (generic, covers MediaTek WiFi and other hardware) ──
+firmware-misc-nonfree
+firmware-linux-free
+
+# ── System tuning ──
+systemd-zram-generator
+
+# ── Fonts (rendered by compositor) ──
+fonts-noto
+fonts-noto-color-emoji
+
+# ── Flatpak runtime ──
+flatpak

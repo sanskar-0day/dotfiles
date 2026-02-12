@@ -1,0 +1,67 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Wofi Style — Premium Dark Launcher
+   Catppuccin Mocha, inspired by dusky's Material container approach
+   ═══════════════════════════════════════════════════════════════════ */
+
+window {
+    font-family: "JetBrains Mono Nerd Font", monospace;
+    font-size: 14px;
+    background-color: rgba(30, 30, 46, 0.92);
+    border: 2px solid rgba(137, 180, 250, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+#input {
+    background-color: rgba(49, 50, 68, 0.6);
+    color: #cdd6f4;
+    border: 1px solid rgba(137, 180, 250, 0.3);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin: 12px;
+    font-size: 14px;
+}
+
+#input:focus {
+    border-color: #89b4fa;
+    box-shadow: 0 0 8px rgba(137, 180, 250, 0.2);
+}
+
+#inner-box {
+    margin: 4px 12px 12px 12px;
+}
+
+#outer-box {
+    padding: 0;
+}
+
+#scroll {
+    margin: 0;
+}
+
+#text {
+    color: #cdd6f4;
+    padding: 0;
+}
+
+#entry {
+    padding: 8px 12px;
+    margin: 2px 0;
+    border-radius: 10px;
+    background: transparent;
+    transition: background-color 150ms ease-in-out;
+}
+
+#entry:selected {
+    background-color: rgba(137, 180, 250, 0.15);
+    border-left: 3px solid #89b4fa;
+}
+
+#entry:selected #text {
+    color: #89b4fa;
+    font-weight: 700;
+}
+
+#img {
+    margin-right: 10px;
+}

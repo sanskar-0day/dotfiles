@@ -1,0 +1,12 @@
+mode=drun
+allow_markup=true
+allow_images=true
+image_size=24
+prompt=
+insensitive=true
+width=450
+height=350
+no_actions=true
+hide_scroll=true
+columns=1
+lines=8
