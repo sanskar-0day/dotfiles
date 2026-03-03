@@ -94,8 +94,13 @@
   # ── Nix Settings ──────────────────────────────────────────────
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
-    max-jobs = 4;
-    cores = 0;
+    # Build speed
+    max-jobs = "auto";              # Use all CPU cores for parallel builds
+    cores = 0;                      # Give each build job all available cores
+    # Download speed — saturate the connection
+    max-substitution-jobs = 128;    # Download 128 packages simultaneously
+    http-connections = 128;         # Max HTTP connections to cache
+    download-buffer-size = 268435456; # 256 MB download buffer
     auto-optimise-store = true;
   };
 
