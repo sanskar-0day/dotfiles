@@ -1,4 +1,4 @@
-{ config, pkgs, pkgs-unstable, ... }:
+{ config, pkgs, unstable, ... }:
 {
   imports = [
     ./shell.nix   # Zsh + Starship
@@ -18,7 +18,7 @@
     mesa-demos
     winboat
     freerdp
-    pkgs-unstable.antigravity
+    unstable.antigravity
     fastfetch
 
     # Nerd Fonts (required for icons in starship, eza, lazyvim)

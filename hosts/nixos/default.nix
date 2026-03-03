@@ -1,4 +1,4 @@
-{ config, pkgs, pkgs-unstable, ... }:
+{ config, pkgs, unstable, ... }:
 {
   imports = [
     ./hardware.nix
@@ -11,8 +11,7 @@
   nixpkgs.config.allowUnfree = true;
 
   # ── Boot & Kernel ──────────────────────────────────────────────
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  # Bootloader (GRUB + Sekiro theme) is configured in modules/boot.nix
   boot.kernelPackages = pkgs.linuxPackages_6_12;
   boot.kernelModules = [ "kvm" "kvm_amd" "iptables_nat" "ip_tables" ];
 
@@ -68,7 +67,6 @@
   users.users.sanskar = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    password = "nixos"; # Force password for VM testing
     extraGroups = [
       "wheel" "networkmanager" "docker" "kvm" "libvirtd"
       "video" "audio" "input" "storage" "optical"
@@ -86,22 +84,14 @@
     kanata cloudflare-warp
 
     # AI Coding Tools (global from unstable)
-    pkgs-unstable.codex
-    pkgs-unstable.gemini-cli
-    pkgs-unstable.qwen-code
-    pkgs-unstable.opencode
+    unstable.codex
+    unstable.gemini-cli
+    unstable.qwen-code
+    unstable.opencode
   ];
 
   # ── Swap & Performance ────────────────────────────────────────
   zramSwap.enable = true;
-
-  # ── VM Resources (for nixos-rebuild build-vm) ──────────────────
-  virtualisation.vmVariant = {
-    virtualisation = {
-      memorySize = 8192; # 8GB RAM
-      cores = 4;        # 4 CPU Cores
-    };
-  };
 
   # ── Nix Settings ──────────────────────────────────────────────
   nix.settings = {

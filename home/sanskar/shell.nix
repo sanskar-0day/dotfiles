@@ -16,36 +16,66 @@
     };
 
     shellAliases = {
-      # NixOS rebuild shortcuts
-      nrs  = "sudo nixos-rebuild switch --flake ~/dotfiles#nixos";
-      nrt  = "sudo nixos-rebuild test --flake ~/dotfiles#nixos";
-      nrvm = "nixos-rebuild build-vm --flake ~/dotfiles#nixos";
-      nix-clean = "sudo nix-collect-garbage -d && nix-collect-garbage -d";
+      # ── NixOS Management ─────────────────────────────────────
+      nrs    = "sudo nixos-rebuild switch --flake ~/dotfiles#nixos";
+      nrt    = "sudo nixos-rebuild test --flake ~/dotfiles#nixos";
+      nrb    = "sudo nixos-rebuild boot --flake ~/dotfiles#nixos";
+      nrvm   = "nixos-rebuild build-vm --flake ~/dotfiles#nixos";
+      nup    = "nix flake update ~/dotfiles && sudo nixos-rebuild switch --flake ~/dotfiles#nixos";
+      ndiff  = "nvd diff /run/current-system result";
+      nlog   = "sudo nix-env --list-generations --profile /nix/var/nix/profiles/system";
+      nroll  = "sudo nixos-rebuild switch --rollback";
+      nclean = "sudo nix-collect-garbage -d && nix-collect-garbage -d && sudo nix-store --optimise";
+      nwhy   = "nix why-depends /run/current-system";
 
-      # eza (better ls)
-      ls = "eza --icons --group-directories-first";
-      ll = "eza -l --icons --group-directories-first";
-      la = "eza -la --icons --group-directories-first";
-      lt = "eza --tree --level=2 --icons";
+      # ── Modern CLI replacements ──────────────────────────────
+      ls  = "eza --icons --group-directories-first";
+      ll  = "eza -l --icons --group-directories-first --git";
+      la  = "eza -la --icons --group-directories-first --git";
+      lt  = "eza --tree --level=2 --icons";
+      lta = "eza --tree --level=3 --icons -a";
 
-      # bat (better cat)
       cat = "bat --style=auto";
+      df  = "duf";
+      du  = "dust";
+      ps  = "procs";
+      dig = "dog";
+      top = "btop";
 
-      # Safety
-      rm = "rm -i";
-      cp = "cp -i";
-      mv = "mv -i";
+      # ── Safety ───────────────────────────────────────────────
+      rm = "trash-put";
+      cp = "cp -iv";
+      mv = "mv -iv";
+      mkdir = "mkdir -pv";
 
-      # Quick dirs
-      ".." = "cd ..";
-      "..." = "cd ../..";
+      # ── Quick dirs ───────────────────────────────────────────
+      ".."   = "cd ..";
+      "..."  = "cd ../..";
       "...." = "cd ../../..";
+      "~"    = "cd ~";
+      "-"    = "cd -";
+
+      # ── Git shortcuts ────────────────────────────────────────
+      g   = "git";
+      gs  = "git status -sb";
+      gd  = "git diff";
+      gp  = "git push";
+      gl  = "git pull";
+      gco = "git checkout";
+      gcm = "git commit -m";
+      gca = "git commit --amend --no-edit";
+      glog = "git log --oneline --graph --decorate -20";
+      lg  = "lazygit";
+
+      # ── Misc ─────────────────────────────────────────────────
+      cls   = "clear";
+      help  = "tldr";
+      ping  = "ping -c 5";
+      myip  = "curl -s ifconfig.me";
+      ports = "sudo ss -tulnp";
     };
 
     initContent = ''
-      # Starship prompt
-      eval "$(starship init zsh)"
-
       # Edit command line in $EDITOR with Ctrl-E
       autoload -z edit-command-line
       zle -N edit-command-line
@@ -63,6 +93,33 @@
 
       # Accept autosuggestion with Ctrl-Space
       bindkey '^ ' autosuggest-accept
+
+      # ── Fuzzy Nix Package Search ──────────────────────────────
+      # ns <query>  → fuzzy search stable packages
+      # nu <query>  → fuzzy search unstable packages
+      # ni <query>  → install a package temporarily with nix shell
+      ns() {
+        nix search nixpkgs#"$1" --json 2>/dev/null \
+          | ${pkgs.jq}/bin/jq -r 'to_entries[] | "\(.key)\t\(.value.description)"' \
+          | column -t -s $'\t' \
+          | ${pkgs.fzf}/bin/fzf --ansi --preview 'echo {}' --header "Stable Packages (25.11)"
+      }
+
+      nu() {
+        nix search github:NixOS/nixpkgs/nixos-unstable#"$1" --json 2>/dev/null \
+          | ${pkgs.jq}/bin/jq -r 'to_entries[] | "\(.key)\t\(.value.description)"' \
+          | column -t -s $'\t' \
+          | ${pkgs.fzf}/bin/fzf --ansi --preview 'echo {}' --header "Unstable Packages"
+      }
+
+      ni() {
+        nix shell nixpkgs#"$1"
+      }
+
+      # ── Quick Edit Dotfiles ───────────────────────────────────
+      dots() {
+        cd ~/dotfiles && $EDITOR .
+      }
 
       # Fastfetch on launch (only in interactive, non-tmux shells)
       if [[ -z "$TMUX" && $- == *i* ]]; then

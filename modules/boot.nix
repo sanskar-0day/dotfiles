@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 
 let
-  # Custom Plymouth theme built from your wallpapers
+  # ── Custom Plymouth Theme (boot splash after bootloader) ─────
   customPlymouthTheme = pkgs.stdenv.mkDerivation {
     pname = "plymouth-theme-nixos-custom";
     version = "1.0";
@@ -19,7 +19,7 @@ let
         -quality 95 \
         "$out/share/plymouth/themes/nixos-custom/background.png"
 
-      # Also prepare the black hole as an alternate (swap in .plymouth to use)
+      # Also prepare the black hole as an alternate
       convert "$src/gargantua-black-3840x2160-9621.jpg" \
         -resize 1920x1080! \
         -quality 95 \
@@ -55,13 +55,52 @@ let
       SCRIPT
     '';
   };
+
+  # ── Sekiro GRUB Theme ───────────────────────────────────────
+  sekiroGrubTheme = pkgs.stdenv.mkDerivation {
+    pname = "sekiro-grub-theme";
+    version = "1.0";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "AbijithBalaji";
+      repo = "sekiro_grub_theme";
+      rev = "main";
+      sha256 = "01zrryxvffg2gp1mgz3c441cb70bkw3yc1pbflpj8miypn6h6z5r";
+    };
+
+    installPhase = ''
+      mkdir -p $out
+      cp -r Sekiro/* $out/
+    '';
+  };
 in
 {
-  # ── Plymouth Boot Splash ──────────────────────────────────────
+  # ── GRUB Bootloader ────────────────────────────────────────────
+  boot.loader = {
+    efi.canTouchEfiVariables = true;
+
+    grub = {
+      enable = true;
+      efiSupport = true;
+      device = "nodev";        # UEFI mode (no MBR device)
+      useOSProber = false;     # Set to true if dual-booting
+
+      # Sekiro theme
+      theme = sekiroGrubTheme;
+      splashImage = null;      # Let the theme handle the background
+
+      # 1-second timeout — "Hesitation is defeat"
+      timeoutStyle = "menu";
+    };
+
+    timeout = 1;
+  };
+
+  # ── Plymouth Boot Splash (after GRUB hands off) ──────────────
   boot.plymouth = {
-    enable = false; # Set to false due to black screen issues
-    # theme = "nixos-custom";
-    # themePackages = [ customPlymouthTheme ];
+    enable = true;
+    theme = "nixos-custom";
+    themePackages = [ customPlymouthTheme ];
   };
 
   # ── Silent & Fast Boot ────────────────────────────────────────
@@ -77,8 +116,6 @@ in
     "udev.log_priority=3"
     "boot.shell_on_fail"
   ];
-
-  boot.loader.timeout = 1;  # 1 second to pick a generation, then auto-boot
 
   # ── Faster Shutdown ───────────────────────────────────────────
   systemd.settings.Manager = {

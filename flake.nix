@@ -18,14 +18,14 @@
   outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, ... }@inputs:
     let
       system = "x86_64-linux";
-      pkgs-unstable = import nixpkgs-unstable {
+      unstable = import nixpkgs-unstable {
         inherit system;
         config.allowUnfree = true;
       };
     in {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       inherit system;
-      specialArgs = { inherit inputs pkgs-unstable; };
+      specialArgs = { inherit inputs unstable; };
       modules = [
         # 1. Import the Main Host Config
         ./hosts/nixos/default.nix
@@ -38,7 +38,7 @@
           home-manager.users.sanskar = import ./home/sanskar;
           
           # Pass pkgs-unstable to home-manager
-          home-manager.extraSpecialArgs = { inherit inputs pkgs-unstable; };
+          home-manager.extraSpecialArgs = { inherit inputs unstable; };
         }
       ];
     };

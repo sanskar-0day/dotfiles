@@ -110,9 +110,23 @@
 
   # ── CLI packages ──────────────────────────────────────────────
   home.packages = with pkgs; [
+    # Core search/file tools
     ripgrep fd eza
+
+    # Modern replacements
+    duf             # better df (disk free)
+    dust            # better du (disk usage)
+    procs           # better ps (processes)
+    dogdns          # better dig (DNS lookup)
+    trash-cli       # safer rm (moves to trash)
+    tealdeer        # tldr – simplified man pages
+    nvd             # NixOS version diff (compare generations)
+    hyperfine       # benchmarking tool
+
+    # Utilities
+    jq              # JSON processor (used by ns/nu functions)
     unzip wl-clipboard rlwrap
     bluez bluez-tools
-    delta
+    curl wget
   ];
 }
