@@ -1,5 +1,0 @@
-# Flatpak apps to install from Flathub
-# One app ID per line. Lines starting with # are comments.
-
-# Browser
-org.mozilla.firefox
