@@ -6,6 +6,7 @@
     ../../modules/nvidia.nix
     ../../modules/desktop.nix
     ../../modules/virtualization.nix
+    ../../modules/gaming.nix
   ];
 
   nixpkgs.config.allowUnfree = true;
@@ -55,10 +56,7 @@
     };
   };
 
-  # ── Steam ──────────────────────────────────────────────────────
-  programs.steam.enable = true;
-  programs.steam.remotePlay.openFirewall = true;
-  programs.steam.dedicatedServer.openFirewall = true;
+  # Steam is configured in modules/gaming.nix
 
   # Zsh (required for it to work as login shell)
   programs.zsh.enable = true;

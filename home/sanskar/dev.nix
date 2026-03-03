@@ -13,7 +13,6 @@
     vscode
     
     # Dev Tools
-    vulkan-loader
     ollama
     typst
   ];

@@ -29,6 +29,12 @@
   # Enable fontconfig for Home Manager fonts
   fonts.fontconfig.enable = true;
 
+  # Fastfetch config (Sekiro-themed)
+  xdg.configFile = {
+    "fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
+    "fastfetch/logo.txt".source     = ./fastfetch/logo.txt;
+  };
+
   # Let Home Manager manage itself
   programs.home-manager.enable = true;
 

@@ -1,61 +1,6 @@
 { config, pkgs, ... }:
 
 let
-  # ── Custom Plymouth Theme (boot splash after bootloader) ─────
-  customPlymouthTheme = pkgs.stdenv.mkDerivation {
-    pname = "plymouth-theme-nixos-custom";
-    version = "1.0";
-
-    src = ../images;
-
-    nativeBuildInputs = [ pkgs.imagemagick ];
-
-    installPhase = ''
-      mkdir -p $out/share/plymouth/themes/nixos-custom
-
-      # Convert and resize the romantic night sky to 1080p PNG
-      convert "$src/romantic-night-sky-3840x2160-25549.jpg" \
-        -resize 1920x1080! \
-        -quality 95 \
-        "$out/share/plymouth/themes/nixos-custom/background.png"
-
-      # Also prepare the black hole as an alternate
-      convert "$src/gargantua-black-3840x2160-9621.jpg" \
-        -resize 1920x1080! \
-        -quality 95 \
-        "$out/share/plymouth/themes/nixos-custom/background-blackhole.png"
-
-      # Plymouth theme descriptor
-      cat > "$out/share/plymouth/themes/nixos-custom/nixos-custom.plymouth" <<EOF
-      [Plymouth Theme]
-      Name=NixOS Custom
-      Description=Custom boot splash with wallpaper
-      ModuleName=script
-
-      [script]
-      ImageDir=$out/share/plymouth/themes/nixos-custom
-      ScriptFile=$out/share/plymouth/themes/nixos-custom/nixos-custom.script
-      EOF
-
-      # Plymouth script – display the background image centered
-      cat > "$out/share/plymouth/themes/nixos-custom/nixos-custom.script" <<'SCRIPT'
-      wallpaper = Image("background.png");
-      screen_width = Window.GetWidth();
-      screen_height = Window.GetHeight();
-      resized = wallpaper.Scale(screen_width, screen_height);
-      sprite = Sprite(resized);
-      sprite.SetX(0);
-      sprite.SetY(0);
-      sprite.SetZ(-100);
-
-      fun refresh_callback() {
-        // Nothing extra needed – static image
-      }
-      Plymouth.SetRefreshFunction(refresh_callback);
-      SCRIPT
-    '';
-  };
-
   # ── Sekiro GRUB Theme ───────────────────────────────────────
   sekiroGrubTheme = pkgs.stdenv.mkDerivation {
     pname = "sekiro-grub-theme";
@@ -71,6 +16,77 @@ let
     installPhase = ''
       mkdir -p $out
       cp -r Sekiro/* $out/
+    '';
+  };
+
+  # ── Sekiro Plymouth Theme (matches GRUB) ────────────────────
+  sekiroPlymouthTheme = pkgs.stdenv.mkDerivation {
+    pname = "plymouth-theme-sekiro";
+    version = "1.0";
+
+    src = sekiroGrubTheme;
+
+    nativeBuildInputs = [ pkgs.imagemagick ];
+
+    installPhase = ''
+      mkdir -p $out/share/plymouth/themes/sekiro
+
+      # Use the Sekiro 1920x1080 background from the GRUB theme
+      cp "$src/sekiro_1920x1080.png" "$out/share/plymouth/themes/sekiro/background.png"
+
+      # Generate spinner frames (a subtle pulsing dot)
+      for i in $(seq 0 23); do
+        # Calculate opacity: cycles smoothly 0→1→0 over 24 frames
+        OPACITY=$(echo "scale=2; s($i * 3.14159 / 12) * 0.6 + 0.4" | ${pkgs.bc}/bin/bc -l)
+
+        convert -size 48x48 xc:none \
+          -fill "rgba(177,64,70,$OPACITY)" \
+          -draw "circle 24,24 24,4" \
+          "$out/share/plymouth/themes/sekiro/spinner-$i.png"
+      done
+
+      # Plymouth theme descriptor
+      cat > "$out/share/plymouth/themes/sekiro/sekiro.plymouth" <<EOF
+      [Plymouth Theme]
+      Name=Sekiro
+      Description=Sekiro-themed boot splash with loading spinner
+      ModuleName=script
+
+      [script]
+      ImageDir=$out/share/plymouth/themes/sekiro
+      ScriptFile=$out/share/plymouth/themes/sekiro/sekiro.script
+      EOF
+
+      # Plymouth script – background + animated spinner
+      cat > "$out/share/plymouth/themes/sekiro/sekiro.script" <<'SCRIPT'
+      // Background
+      wallpaper = Image("background.png");
+      screen_w = Window.GetWidth();
+      screen_h = Window.GetHeight();
+      resized = wallpaper.Scale(screen_w, screen_h);
+      bg_sprite = Sprite(resized);
+      bg_sprite.SetX(0);
+      bg_sprite.SetY(0);
+      bg_sprite.SetZ(-100);
+
+      // Spinner animation (24 frames, pulsing dot)
+      spinner_frames = [];
+      for (i = 0; i < 24; i++) {
+        spinner_frames[i] = Image("spinner-" + i + ".png");
+      }
+
+      spinner_sprite = Sprite();
+      spinner_sprite.SetX(screen_w / 2 - 24);
+      spinner_sprite.SetY(screen_h * 0.85);
+      spinner_sprite.SetZ(100);
+
+      frame = 0;
+      fun refresh_callback() {
+        spinner_sprite.SetImage(spinner_frames[Math.Int(frame)]);
+        frame = (frame + 0.5) % 24;
+      }
+      Plymouth.SetRefreshFunction(refresh_callback);
+      SCRIPT
     '';
   };
 in
@@ -89,18 +105,22 @@ in
       theme = sekiroGrubTheme;
       splashImage = null;      # Let the theme handle the background
 
-      # 1-second timeout — "Hesitation is defeat"
+      # Show the menu so you can admire the Sekiro art
       timeoutStyle = "menu";
+
+      # Limit generations shown in menu
+      configurationLimit = 10;
     };
 
-    timeout = 1;
+    # 5 seconds to pick a generation — enough to see the theme
+    timeout = 5;
   };
 
-  # ── Plymouth Boot Splash (after GRUB hands off) ──────────────
+  # ── Plymouth Boot Splash (Sekiro-themed after GRUB) ──────────
   boot.plymouth = {
     enable = true;
-    theme = "nixos-custom";
-    themePackages = [ customPlymouthTheme ];
+    theme = "sekiro";
+    themePackages = [ sekiroPlymouthTheme ];
   };
 
   # ── Silent & Fast Boot ────────────────────────────────────────
