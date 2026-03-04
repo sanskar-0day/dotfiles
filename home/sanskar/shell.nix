@@ -17,11 +17,11 @@
 
     shellAliases = {
       # ── NixOS Management ─────────────────────────────────────
-      nrs    = "sudo nixos-rebuild switch --flake ~/dotfiles#nixos";
-      nrt    = "sudo nixos-rebuild test --flake ~/dotfiles#nixos";
-      nrb    = "sudo nixos-rebuild boot --flake ~/dotfiles#nixos";
-      nrvm   = "nixos-rebuild build-vm --flake ~/dotfiles#nixos";
-      nup    = "nix flake update ~/dotfiles && sudo nixos-rebuild switch --flake ~/dotfiles#nixos";
+      nrs    = "sudo nixos-rebuild switch --flake ~/dotfiles#nixos --fallback";
+      nrt    = "sudo nixos-rebuild test --flake ~/dotfiles#nixos --fallback";
+      nrb    = "sudo nixos-rebuild boot --flake ~/dotfiles#nixos --fallback";
+      nrvm   = "nixos-rebuild build-vm --flake ~/dotfiles#nixos --fallback";
+      nup    = "nix flake update ~/dotfiles && sudo nixos-rebuild switch --flake ~/dotfiles#nixos --fallback";
       ndiff  = "nvd diff /run/current-system result";
       nlog   = "sudo nix-env --list-generations --profile /nix/var/nix/profiles/system";
       nroll  = "sudo nixos-rebuild switch --rollback";

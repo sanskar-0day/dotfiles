@@ -6,14 +6,12 @@
   environment.systemPackages = with pkgs; [
     # Wine Staging (best for games — includes experimental patches)
     wineWowPackages.stagingFull
+    winetricks
 
-    # Essential Wine tools
-    winetricks          # Install Windows deps (DirectX, .NET, Visual C++, etc.)
-
-    # Game launchers (pick your weapon)
-    lutris              # Runs any Windows game with auto Wine/DXVK setup
-    bottles             # Modern Wine prefix manager — easy "one-click" installs
-    heroic              # Epic Games / GOG launcher for Linux
+    # Game launchers
+    lutris
+    bottles
+    heroic              # Epic Games / GOG launcher
 
     # Performance
     mangohud            # FPS overlay (Vulkan/OpenGL)

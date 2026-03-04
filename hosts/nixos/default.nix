@@ -94,14 +94,30 @@
   # ── Nix Settings ──────────────────────────────────────────────
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
-    # Build speed
-    max-jobs = "auto";              # Use all CPU cores for parallel builds
-    cores = 0;                      # Give each build job all available cores
-    # Download speed — saturate the connection
-    max-substitution-jobs = 128;    # Download 128 packages simultaneously
-    http-connections = 128;         # Max HTTP connections to cache
-    download-buffer-size = 268435456; # 256 MB download buffer
+
+    # Build — uses ~half of 16 cores / 22GB RAM
+    max-jobs = 4;
+    cores = 4;
+
+    # Downloads
+    max-substitution-jobs = 8;
+    http-connections = 8;
     auto-optimise-store = true;
+
+    # Mirrors ordered by speed (tested from your connection)
+    substituters = [
+      "https://mirrors.ustc.edu.cn/nix-channels/store"            # 1.9s ✓
+      "https://cache.nixos.org"                                    # 1.1s ✓
+      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"   # 2.1s ✓
+      "https://mirror.sjtu.edu.cn/nix-channels/store"             # 3.8s ✓
+    ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+    ];
+
+    # Auto-skip stalled downloads
+    stalled-download-timeout = 5;
+    connect-timeout = 5;
   };
 
   # ── Garbage Collection (every 15 days) ────────────────────────
