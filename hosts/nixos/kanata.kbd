@@ -10,9 +10,9 @@
 ;; =============================================================================
 
 (defsrc
-  caps  a  s  d  f  g  h  j  k  l  scln  quot
-  tab   q  w  e  r  t  y  u  i  o  p  lbkt  rbkt
-  lsft  z  x  c  v  b  n  m  comm  dot  slsh  rsft
+  caps  a  s  d  f  g  h  j  k  l  scln  apos
+  tab   q  w  e  r  t  y  u  i  o  p  lbrc  rbrc
+  lsft  z  x  c  v  b  n  m  comm  .  /  rsft
   lctl  lmet  lalt  spc  ralt  rmet  rctl
   ret   bspc
 )
@@ -68,9 +68,9 @@
 ;; BASE LAYER – normal typing
 ;; -----------------------------------------------------------------------------
 (deflayer base
-  @hyper  a   s   d   f   g   h   j   k   l   scln  quot
-  @sys    q   w   e   r   t   y   u   i   o   p   lbkt  rbkt
-  lsft    z   x   c   v   b   n   m   comm  dot   slsh  rsft
+  @hyper  a   s   d   f   g   h   j   k   l   scln  apos
+  @sys    q   w   e   r   t   y   u   i   o   p   lbrc  rbrc
+  lsft    z   x   c   v   b   n   m   comm  .   /  rsft
   lctl    lmet  lalt  spc   @meta  rmet  rctl
   ret     bspc
 )
