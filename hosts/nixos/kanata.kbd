@@ -29,32 +29,32 @@
   sys   (tap-hold 200 200 tab  (layer-while-held system))
 
   ;; Media keys
-  voldown (macro XF86AudioLowerVolume)
-  volup   (macro XF86AudioRaiseVolume)
-  mute    (macro XF86AudioMute)
-  play    (macro XF86AudioPlay)
-  prev    (macro XF86AudioPrev)
-  next    (macro XF86AudioNext)
-  media   (macro XF86AudioMedia)
+  voldown vold
+  volup   volu
+  mute    mute
+  play    pp
+  prev    prev
+  next    next
+  media   media
 
   ;; System keys
-  prtsc   (macro PrtSc)
-  scrlk   (macro Scroll_Lock)
-  pause   (macro Pause)
-  menu    (macro Menu)
+  prtsc   prtsc
+  scrlk   slck
+  pause   pause
+  menu    menu
 
   ;; Mouse actions (faster 30px steps, 3‑line scroll)
-  mleft   (mouse-move -30 0)
-  mright  (mouse-move 30 0)
-  mup     (mouse-move 0 -30)
-  mdown   (mouse-move 0 30)
-  mclick-left  (mouse-click left)
-  mclick-right (mouse-click right)
-  mclick-mid   (mouse-click middle)
-  mscroll-up   (mouse-scroll 0 -3)
-  mscroll-down (mouse-scroll 0 3)
-  mscroll-left (mouse-scroll -3 0)
-  mscroll-right (mouse-scroll 3 0)
+  mleft   (movemouse-left 30 30)
+  mright  (movemouse-right 30 30)
+  mup     (movemouse-up 30 30)
+  mdown   (movemouse-down 30 30)
+  mclick-left  mlft
+  mclick-right mrgt
+  mclick-mid   mmid
+  mscroll-up   mwu
+  mscroll-down mwd
+  mscroll-left mwl
+  mscroll-right mwr
 
   ;; Common editing shortcuts (Ctrl+letter)
   ctl-z (with-hold lctl z)
