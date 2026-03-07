@@ -1,89 +1,109 @@
 ;; =============================================================================
 ;; Kanata Configuration – Ultimate Home-Row-Centric Layout
-;; Kanata v1.8-compatible key/action names
+;; =============================================================================
+;; Modifiers:
+;;   CapsLock : tap = Esc, hold = Nav layer
+;;   RightAlt : tap = Right Alt, hold = NumSym layer
+;;   Tab      : tap = Tab, hold = System layer (mouse + media)
+;;
+;; All other keys (Shift, Ctrl, Super, etc.) work normally.
 ;; =============================================================================
 
 (defsrc
-  caps  a  s  d  f  g  h  j  k  l  scln  apos
-  tab   q  w  e  r  t  y  u  i  o  p  lbrc  rbrc
-  lsft  z  x  c  v  b  n  m  comm  .  /  rsft
+  caps  a  s  d  f  g  h  j  k  l  scln  quot
+  tab   q  w  e  r  t  y  u  i  o  p  lbkt  rbkt
+  lsft  z  x  c  v  b  n  m  comm  dot  slsh  rsft
   lctl  lmet  lalt  spc  ralt  rmet  rctl
   ret   bspc
 )
 
-;; (defcfg
-;;   process-unmapped-keys yes
-;; )
 
+
+;; -----------------------------------------------------------------------------
+;; Aliases for common actions
+;; -----------------------------------------------------------------------------
 (defalias
+  ;; Layer triggers
   hyper (tap-hold 200 200 esc (layer-while-held nav))
-  meta-l (tap-hold 200 200 lalt (layer-while-held numsym))
-  meta-r (tap-hold 200 200 ralt (layer-while-held numsym))
+  meta  (tap-hold 200 200 ralt (layer-while-held numsym))
   sys   (tap-hold 200 200 tab  (layer-while-held system))
 
-  ;; Media/system key names in this build
-  voldown vold
-  volup   volu
-  mute    mute
-  play    pp
-  prev    prev
-  next    next
-  media   media
+  ;; Media keys
+  voldown (macro XF86AudioLowerVolume)
+  volup   (macro XF86AudioRaiseVolume)
+  mute    (macro XF86AudioMute)
+  play    (macro XF86AudioPlay)
+  prev    (macro XF86AudioPrev)
+  next    (macro XF86AudioNext)
+  media   (macro XF86AudioMedia)
 
-  prtsc   prtsc
-  scrlk   slck
-  pause   pause
-  menu    menu
+  ;; System keys
+  prtsc   (macro PrtSc)
+  scrlk   (macro Scroll_Lock)
+  pause   (macro Pause)
+  menu    (macro Menu)
 
-  ;; Mouse
-  mleft   (movemouse-left 30 30)
-  mright  (movemouse-right 30 30)
-  mup     (movemouse-up 300 30)
-  mdown   (movemouse-down 300 30)
-  mclick-left  mlft
-  mclick-right mrgt
-  mclick-mid   mmid
-  mscroll-up   mwu
-  mscroll-down mwd
-  mscroll-left mwl
-  mscroll-right mwr
+  ;; Mouse actions (faster 30px steps, 3‑line scroll)
+  mleft   (mouse-move -30 0)
+  mright  (mouse-move 30 0)
+  mup     (mouse-move 0 -30)
+  mdown   (mouse-move 0 30)
+  mclick-left  (mouse-click left)
+  mclick-right (mouse-click right)
+  mclick-mid   (mouse-click middle)
+  mscroll-up   (mouse-scroll 0 -3)
+  mscroll-down (mouse-scroll 0 3)
+  mscroll-left (mouse-scroll -3 0)
+  mscroll-right (mouse-scroll 3 0)
 
-  ;; Ctrl shortcuts
-  ctl-z C-z
-  ctl-x C-x
-  ctl-c C-c
-  ctl-v C-v
-  ctl-y C-y
+  ;; Common editing shortcuts (Ctrl+letter)
+  ctl-z (with-hold lctl z)
+  ctl-x (with-hold lctl x)
+  ctl-c (with-hold lctl c)
+  ctl-v (with-hold lctl v)
+  ctl-y (with-hold lctl y)
 )
 
+;; -----------------------------------------------------------------------------
+;; BASE LAYER – normal typing
+;; -----------------------------------------------------------------------------
 (deflayer base
-  @hyper  a   s   d   f   g   h   j   k   l   scln  apos
-  @sys    q   w   e   r   t   y   u   i   o   p   lbrc  rbrc
-  lsft    z   x   c   v   b   n   m   comm  .   /  rsft
-  lctl    lmet  @meta-l  spc   @meta-r  rmet  rctl
+  @hyper  a   s   d   f   g   h   j   k   l   scln  quot
+  @sys    q   w   e   r   t   y   u   i   o   p   lbkt  rbkt
+  lsft    z   x   c   v   b   n   m   comm  dot   slsh  rsft
+  lctl    lmet  lalt  spc   @meta  rmet  rctl
   ret     bspc
 )
 
+;; -----------------------------------------------------------------------------
+;; NAV LAYER – hold CapsLock
+;; -----------------------------------------------------------------------------
 (deflayer nav
-  _   f7   f8   f9   f10  f11  f12  left down up   right _
-  _   f1   f2   f3   f4   f5   f6   home pgup pgdn end   _    _
-  _   @ctl-z @ctl-x @ctl-c @ctl-v @ctl-y del  ins  _    _    _    _
-  _   _    _    _    _    _    _
-  _   _
+  _   f7   f8   f9   f10  f11  f12  left down up   right _      ; row1: a-;
+  _   f1   f2   f3   f4   f5   f6   home pgup pgdn end   _    _  ; row2: q-p
+  _   @ctl-z @ctl-x @ctl-c @ctl-v @ctl-y del  ins  _    _    _    _  ; row3: z-rsft (del on n, ins on m)
+  _   _    _    _    _    _    _                                   ; row4: modifiers
+  _   _                                                             ; row5: ret, bspc
 )
 
+;; -----------------------------------------------------------------------------
+;; NUMSYM LAYER – hold Right Alt
+;; -----------------------------------------------------------------------------
 (deflayer numsym
-  _   S-1  S-2  S-3  S-4  S-5  S-6  S-7  S-8  S-9  S-0  grave
-  _   1    2    3    4    5    6    7    8    9    0    -    =
-  _   -    S--  =    S-=  lbrc rbrc S-lbrc S-rbrc bksl  S-bksl  _
-  _   _    _    _    _    _    _
-  _   _
+  _   !    @    #    $    %    ^    &    *    (    )    grave       ; row1: a-; (grave = `)
+  _   1    2    3    4    5    6    7    8    9    0    _     _     ; row2: q-p
+  _   -    (with-hold lsft -) =   (with-hold lsft =) [    ]    (with-hold lsft [) (with-hold lsft ]) \   (with-hold lsft \) _  ; row3: z-rsft (hyphen, underscore, equals, plus, [, ], {, }, \, |)
+  _   _    _    _    _    _    _                                   ; row4: modifiers
+  _   _                                                             ; row5: ret, bspc
 )
 
+;; -----------------------------------------------------------------------------
+;; SYSTEM LAYER – hold Tab (mouse + media)
+;; -----------------------------------------------------------------------------
 (deflayer system
-  _   f13  f14  f15  f16  _    @mleft @mdown @mup   @mright @mscroll-down _
-  _   @prtsc @scrlk @pause @menu _    _    @mclick-left @mclick-right @mclick-mid @mscroll-up _    _
-  _   @voldown @volup @mute @play @prev @next @media @mscroll-left @mscroll-right _    _
-  _   _    _    _    _    _    _
-  _   _
+  _   f13  f14  f15  f16  _    @mleft @mdown @mup   @mright @mscroll-down _      ; row1: a-; (mouse movement)
+  _   @prtsc @scrlk @pause @menu _    _    @mclick-left @mclick-right @mclick-mid @mscroll-up _    _    ; row2: q-p (system + mouse clicks)
+  _   @voldown @volup @mute @play @prev @next @media _    _    _    _         ; row3: z-rsft (media keys)
+  _   _    _    _    _    _    _                                   ; row4: modifiers
+  _   _                                                             ; row5: ret, bspc
 )

@@ -53,6 +53,7 @@
     enable = true;
     keyboards.default = {
       config = builtins.readFile ./kanata.kbd;
+      extraDefCfg = "process-unmapped-keys yes";
       devices = [];   # empty = capture all keyboards
     };
   };
