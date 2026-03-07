@@ -14,4 +14,15 @@ return {
 
   -- Nix language support
   { "LnL7/vim-nix", ft = "nix" },
+
+  -- AI Copilot / opencode support
+  {
+    "Kaiser-Yang/opencode.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "MunifTanjim/nui.nvim",
+    },
+    opts = {},               -- Call setup() automatically
+    cmd = { "OpenCode" },    -- Lazy load on command
+  },
 }

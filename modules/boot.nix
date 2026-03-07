@@ -116,11 +116,15 @@ in
     timeout = 5;
   };
 
-  # ── Plymouth Boot Splash (Sekiro-themed after GRUB) ──────────
+  # ── Plymouth Boot Splash ─────────────────────────────────────
+  # Using adi1090x's premium animated themes (80+ options)
+  # Change theme name to try others: rings, hexagon_dots, deus_ex, etc.
   boot.plymouth = {
     enable = true;
-    theme = "sekiro";
-    themePackages = [ sekiroPlymouthTheme ];
+    theme = "lone";
+    themePackages = [
+      (pkgs.adi1090x-plymouth-themes.override { selected_themes = [ "lone" ]; })
+    ];
   };
 
   # ── Silent & Fast Boot ────────────────────────────────────────

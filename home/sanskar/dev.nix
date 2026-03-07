@@ -43,7 +43,6 @@
     # ── IDEs & Tools ───────────────────────────────────────────
     jetbrains.pycharm
     vscode
-    ollama                  # Local LLMs
     typst                   # Modern LaTeX alternative
     just                    # Command runner (better Makefile)
     tokei                   # Code line counter

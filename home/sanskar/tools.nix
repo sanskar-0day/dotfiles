@@ -79,7 +79,6 @@
   programs.atuin = {
     enable = true;
     enableZshIntegration = true;
-    flags = [ "--disable-up-arrow" ];
     settings = {
       style = "compact";
       inline_height = 20;
@@ -116,12 +115,19 @@
     # Modern replacements
     duf             # better df (disk free)
     dust            # better du (disk usage)
+    dua             # interactive disk usage tool
     procs           # better ps (processes)
     dogdns          # better dig (DNS lookup)
     trash-cli       # safer rm (moves to trash)
     tealdeer        # tldr – simplified man pages
     nvd             # NixOS version diff (compare generations)
     hyperfine       # benchmarking tool
+    
+    # Nix CLI Tools
+    nh                  # yet another nix cli helper
+    nix-output-monitor  # nom - pretty output for nix builds
+    nix-fast-build      # fast concurrent nix builds
+    devenv              # reproducible developer environments
 
     # Utilities
     jq              # JSON processor (used by ns/nu functions)

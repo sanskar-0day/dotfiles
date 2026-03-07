@@ -7,6 +7,7 @@
     ../../modules/desktop.nix
     ../../modules/virtualization.nix
     ../../modules/gaming.nix
+    ../../modules/ai.nix
   ];
 
   nixpkgs.config.allowUnfree = true;

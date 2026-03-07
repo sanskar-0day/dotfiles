@@ -54,4 +54,14 @@
     enable = true;
     capSysNice = true;  # Allow priority scheduling
   };
+
+  # ── Wine / FitGirl Repack memory fixes ───────────────────────
+  # FitGirl's Oodle decompressor needs huge stack + memory mappings
+  boot.kernel.sysctl = {
+    "vm.max_map_count" = 2147483642;  # Wine needs lots of memory mappings
+  };
+  security.pam.loginLimits = [
+    { domain = "*"; type = "hard"; item = "stack"; value = "unlimited"; }
+    { domain = "*"; type = "soft"; item = "stack"; value = "unlimited"; }
+  ];
 }

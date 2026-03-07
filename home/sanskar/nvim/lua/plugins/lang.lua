@@ -127,13 +127,17 @@ return {
     end,
   },
 
-  -- ── Common Lisp (SLIME-like REPL) ──────────────────────────
+  -- ── Common Lisp (SLIME-like REPL & Parinfer) ─────────────
   {
     "vlime/vlime",
     ft = { "lisp", "commonlisp" },
     config = function()
       vim.g.vlime_cl_impl = "sbcl"
     end,
+  },
+  {
+    "gpanders/nvim-parinfer",
+    ft = { "lisp", "commonlisp", "clojure", "scheme", "racket", "fennel" },
   },
 
   -- ── Nim support ─────────────────────────────────────────────

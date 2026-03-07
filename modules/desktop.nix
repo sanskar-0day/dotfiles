@@ -29,12 +29,12 @@
 
   # ── KDE Tools ─────────────────────────────────────────────────
   environment.systemPackages = with pkgs; [
-    kdePackages.partitionmanager    # Disk/partition management
-    kdePackages.ark                  # Archive manager
-    kdePackages.filelight            # Disk usage visualizer
-    kdePackages.gwenview             # Image viewer
-    kdePackages.kate                 # Text editor
-    kdePackages.kcalc                # Calculator
-    kdePackages.kolourpaint          # Simple image editor
+    kdePackages.partitionmanager # Disk/partition management
+    kdePackages.ark # Archive manager
+    kdePackages.filelight # Disk usage visualizer
+    kdePackages.gwenview # Image viewer
+    kdePackages.kate # Text editor
+    kdePackages.kcalc # Calculator
+    kdePackages.kolourpaint # Simple image editor
   ];
 }
