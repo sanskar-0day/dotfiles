@@ -57,23 +57,23 @@
   mscroll-right mwr
 
   ;; Common editing shortcuts (Ctrl+letter)
-  ctl-z (with-hold lctl z)
-  ctl-x (with-hold lctl x)
-  ctl-c (with-hold lctl c)
-  ctl-v (with-hold lctl v)
-  ctl-y (with-hold lctl y)
+  ctl-z C-z
+  ctl-x C-x
+  ctl-c C-c
+  ctl-v C-v
+  ctl-y C-y
 
   ;; Shifted symbols (for numsym layer)
   _ -
-  us (with-hold lsft -)
+  us S--
   eq =
-  pl (with-hold lsft =)
+  pl S-=
   lb [
   rb ]
-  lc (with-hold lsft [)
-  rc (with-hold lsft ])
+  lc S-[
+  rc S-]
   bs \
-  pi (with-hold lsft \)
+  pi S-\
 )
 
 ;; -----------------------------------------------------------------------------
