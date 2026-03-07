@@ -121,9 +121,9 @@ in
   # Change theme name to try others: rings, hexagon_dots, deus_ex, etc.
   boot.plymouth = {
     enable = true;
-    theme = "lone";
+    theme = "cross_hud";
     themePackages = [
-      (pkgs.adi1090x-plymouth-themes.override { selected_themes = [ "lone" ]; })
+      (pkgs.adi1090x-plymouth-themes.override { selected_themes = [ "cross_hud" ]; })
     ];
   };
 
