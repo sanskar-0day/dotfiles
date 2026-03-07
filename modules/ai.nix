@@ -6,23 +6,29 @@
     unstable.llama-cpp
   ];
 
-  # Start Ollama service (CPU/Auto-detect to avoid 40m source compilation)
-  services.ollama = {
+  # ── Direct llama.cpp Backend ──────────────────────────────────
+  # Replacing Ollama with a native llama-server to support the Qwen 3.5 architecture
+  # Hosts the exact same 11434 endpoint so Open WebUI doesn't notice the difference.
+  systemd.services.llama-cpp = {
     enable = true;
-    package = unstable.ollama-cuda; # Pull cutting-edge version for Qwen 3.5 support
-    
-    # Allow local connections
-    host = "127.0.0.1";
-    port = 11434;
-  };
+    description = "llama.cpp API Server";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
 
-  # Override systemd sandbox so it can actually read the user's files
-  systemd.services.ollama = {
     serviceConfig = {
-      User = pkgs.lib.mkForce "sanskar";
-      Group = pkgs.lib.mkForce "users";
-      DynamicUser = pkgs.lib.mkForce false; # Disable the random UID sandbox
-      ProtectHome = pkgs.lib.mkForce false; # Allow reading ~/.ollama
+      # The downloaded Qwen3.5-9B-GGUF model from Ollama's cache
+      ExecStart = ''
+        ${pkgs.unstable.llama-cpp}/bin/llama-server \
+          --model /var/lib/ollama/models/blobs/sha256-023713a5240bf58a84d2890a30deb2e0485abb5b9b9c33ba67596e9248b35f80 \
+          --host 127.0.0.1 \
+          --port 11434 \
+          --n-gpu-layers 99 \
+          --ctx-size 8192
+      '';
+      Restart = "always";
+      RestartSec = "3";
+      User = "sanskar";
+      Group = "users";
     };
   };
 
