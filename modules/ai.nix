@@ -20,6 +20,7 @@
       ExecStart = ''
         ${unstable.llama-cpp}/bin/llama-server \
           --model /var/lib/ollama/models/blobs/sha256-023713a5240bf58a84d2890a30deb2e0485abb5b9b9c33ba67596e9248b35f80 \
+          --alias "Qwen3.5-9B" \
           --host 127.0.0.1 \
           --port 11434 \
           --n-gpu-layers 99 \
@@ -38,11 +39,12 @@
     port = 8080;
     host = "127.0.0.1";
 
-    # Point WebUI to local Ollama and disable telemetry
+    # Point WebUI to local llama-server via OpenAI API compatibility
     environment = {
-      OLLAMA_API_BASE_URL = "http://127.0.0.1:11434/api";
-      # You can enable OpenAI API later if you want to use external keys
-      ENABLE_OPENAI_API = "False";
+      ENABLE_OLLAMA_API = "False";
+      ENABLE_OPENAI_API = "True";
+      OPENAI_API_BASE_URL = "http://127.0.0.1:11434/v1";
+      OPENAI_API_KEY = "llama.cpp"; # Dummy key
       
       # Privacy/Telemetry
       SCARF_NO_ANALYTICS = "True";
