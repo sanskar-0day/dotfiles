@@ -35,7 +35,7 @@
 
   # Open WebUI (Beautiful local ChatGPT clone)
   services.open-webui = {
-    enable = true;
+    enable = false; # Disabled in favor of llama-server's lightweight built-in UI
     port = 8080;
     host = "127.0.0.1";
 
