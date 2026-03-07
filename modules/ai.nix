@@ -18,7 +18,7 @@
     serviceConfig = {
       # The downloaded Qwen3.5-9B-GGUF model from Ollama's cache
       ExecStart = ''
-        ${pkgs.unstable.llama-cpp}/bin/llama-server \
+        ${unstable.llama-cpp}/bin/llama-server \
           --model /var/lib/ollama/models/blobs/sha256-023713a5240bf58a84d2890a30deb2e0485abb5b9b9c33ba67596e9248b35f80 \
           --host 127.0.0.1 \
           --port 11434 \
