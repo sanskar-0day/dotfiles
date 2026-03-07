@@ -62,6 +62,18 @@
   ctl-c (with-hold lctl c)
   ctl-v (with-hold lctl v)
   ctl-y (with-hold lctl y)
+
+  ;; Shifted symbols (for numsym layer)
+  _ -
+  us (with-hold lsft -)
+  eq =
+  pl (with-hold lsft =)
+  lb [
+  rb ]
+  lc (with-hold lsft [)
+  rc (with-hold lsft ])
+  bs \
+  pi (with-hold lsft \)
 )
 
 ;; -----------------------------------------------------------------------------
@@ -75,35 +87,26 @@
   ret     bspc
 )
 
-;; -----------------------------------------------------------------------------
-;; NAV LAYER – hold CapsLock
-;; -----------------------------------------------------------------------------
 (deflayer nav
-  _   f7   f8   f9   f10  f11  f12  left down up   right _      ; row1: a-;
-  _   f1   f2   f3   f4   f5   f6   home pgup pgdn end   _    _  ; row2: q-p
-  _   @ctl-z @ctl-x @ctl-c @ctl-v @ctl-y del  ins  _    _    _    _  ; row3: z-rsft (del on n, ins on m)
-  _   _    _    _    _    _    _                                   ; row4: modifiers
-  _   _                                                             ; row5: ret, bspc
+  _   f7   f8   f9   f10  f11  f12  left down up   right _
+  _   f1   f2   f3   f4   f5   f6   home pgup pgdn end   _    _
+  _   @ctl-z @ctl-x @ctl-c @ctl-v @ctl-y del  ins  _    _    _    _
+  _   _    _    _    _    _    _
+  _   _
 )
 
-;; -----------------------------------------------------------------------------
-;; NUMSYM LAYER – hold Right Alt
-;; -----------------------------------------------------------------------------
 (deflayer numsym
-  _   !    @    #    $    %    ^    &    *    (    )    grave       ; row1: a-; (grave = `)
-  _   1    2    3    4    5    6    7    8    9    0    _     _     ; row2: q-p
-  _   -    (with-hold lsft -) =   (with-hold lsft =) [    ]    (with-hold lsft [) (with-hold lsft ]) \   (with-hold lsft \) _  ; row3: z-rsft (hyphen, underscore, equals, plus, [, ], {, }, \, |)
-  _   _    _    _    _    _    _                                   ; row4: modifiers
-  _   _                                                             ; row5: ret, bspc
+  _   !    @    #    $    %    ^    &    *    (    )    grave
+  _   1    2    3    4    5    6    7    8    9    0    _     _
+  _   @_   @us  @eq  @pl  @lb  @rb  @lc  @rc  @bs  @pi   _
+  _   _    _    _    _    _    _
+  _   _
 )
 
-;; -----------------------------------------------------------------------------
-;; SYSTEM LAYER – hold Tab (mouse + media)
-;; -----------------------------------------------------------------------------
 (deflayer system
-  _   f13  f14  f15  f16  _    @mleft @mdown @mup   @mright @mscroll-down _      ; row1: a-; (mouse movement)
-  _   @prtsc @scrlk @pause @menu _    _    @mclick-left @mclick-right @mclick-mid @mscroll-up _    _    ; row2: q-p (system + mouse clicks)
-  _   @voldown @volup @mute @play @prev @next @media _    _    _    _         ; row3: z-rsft (media keys)
-  _   _    _    _    _    _    _                                   ; row4: modifiers
-  _   _                                                             ; row5: ret, bspc
+  _   f13  f14  f15  f16  _    @mleft @mdown @mup   @mright @mscroll-down _
+  _   @prtsc @scrlk @pause @menu _    _    @mclick-left @mclick-right @mclick-mid @mscroll-up _    _
+  _   @voldown @volup @mute @play @prev @next @media _    _    _    _
+  _   _    _    _    _    _    _
+  _   _
 )
