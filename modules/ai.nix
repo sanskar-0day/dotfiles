@@ -3,7 +3,7 @@
   # ── Local AI Infrastructure (Ollama + Open WebUI) ─────────────
 
   environment.systemPackages = with pkgs; [
-    unstable.llama-cpp
+    unstable.llama-cpp-vulkan
   ];
 
   # ── Direct llama.cpp Backend ──────────────────────────────────
@@ -16,10 +16,19 @@
     after = [ "network.target" ];
 
     serviceConfig = {
-      # 35B Model downloaded by the user
+      # Setup models directory for dynamic switching in the Web UI
+      preStart = ''
+        mkdir -p /var/lib/llama-models
+        rm -f /var/lib/llama-models/*
+        ln -sf /var/lib/ollama/models/blobs/sha256-023713a5240bf58a84d2890a30deb2e0485abb5b9b9c33ba67596e9248b35f80 /var/lib/llama-models/Qwen3.5-9B.gguf
+        ln -sf /home/sanskar/Downloads/Qwen3.5-35B-A3B-heretic.Q3_K_S.gguf /var/lib/llama-models/Qwen3.5-35B.gguf
+      '';
+
+      # 35B Model downloaded by the user (starts by default, others selectable in UI)
       ExecStart = ''
-        ${unstable.llama-cpp}/bin/llama-server \
-          --model /home/sanskar/Downloads/Qwen3.5-35B-A3B-heretic.Q3_K_S.gguf \
+        ${unstable.llama-cpp-vulkan}/bin/llama-server \
+          --models-dir /var/lib/llama-models \
+          --model /var/lib/llama-models/Qwen3.5-35B.gguf \
           --alias "Qwen3.5-35B" \
           --host 127.0.0.1 \
           --port 11434 \
