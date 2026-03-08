@@ -35,6 +35,10 @@
   boot.consoleLogLevel = 0;
   boot.initrd.verbose = false;
 
+  # Replace legacy bash initrd with hyper-fast parallel Systemd initrd
+  boot.initrd.systemd.enable = true;
+  boot.loader.grub.enable = false;
+
   boot.kernelParams = [
     "quiet"
     "splash"
