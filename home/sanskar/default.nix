@@ -28,8 +28,7 @@
     fastfetch
     telegram-desktop
     vlc
-    i2pd
-    yggdrasil
+    ncdu
 
     # Nerd Fonts (required for icons in starship, eza, lazyvim)
     nerd-fonts.jetbrains-mono
