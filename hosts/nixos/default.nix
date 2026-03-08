@@ -10,9 +10,6 @@
     ../../modules/ai.nix
   ];
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.permittedInsecurePackages = [
-    "openclaw-2026.2.26"
-  ];
 
   # ── Boot & Kernel ──────────────────────────────────────────────
   # Bootloader (GRUB + Sekiro theme) is configured in modules/boot.nix
