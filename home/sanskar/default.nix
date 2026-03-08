@@ -29,7 +29,6 @@
     vlc
     i2pd
     yggdrasil
-    zed-editor
 
     # Nerd Fonts (required for icons in starship, eza, lazyvim)
     nerd-fonts.jetbrains-mono
@@ -76,6 +75,12 @@
 
   # Let Home Manager manage itself
   programs.home-manager.enable = true;
+
+  # Auto-map LM Studio's internal database directly to the user's permanent ~/models directory
+  home.activation.linkLmStudioModels = pkgs.lib.hm.dag.entryAfter ["writeBoundary"] ''
+    mkdir -p ~/.cache/lm-studio
+    ln -sfn ~/models ~/.cache/lm-studio/models
+  '';
 
   # Home Manager state version
   home.stateVersion = "25.11";
