@@ -24,8 +24,8 @@
           --alias "Qwen3.5-35B" \
           --host 127.0.0.1 \
           --port 11434 \
-          --n-gpu-layers 25 \
-          --ctx-size 8192
+          --n-gpu-layers 5 \
+          --ctx-size 4096
       '';
       Restart = "always";
       RestartSec = "3";
