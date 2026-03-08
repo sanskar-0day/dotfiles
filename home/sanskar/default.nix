@@ -2,6 +2,7 @@
   config,
   pkgs,
   unstable,
+  lib,
   ...
 }:
 {
@@ -77,7 +78,7 @@
   programs.home-manager.enable = true;
 
   # Auto-map LM Studio's internal database directly to the user's permanent ~/models directory
-  home.activation.linkLmStudioModels = pkgs.lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.linkLmStudioModels = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p ~/.cache/lm-studio
     ln -sfn ~/models ~/.cache/lm-studio/models
   '';
