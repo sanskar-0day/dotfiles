@@ -29,6 +29,7 @@
     vlc
     i2pd
     yggdrasil
+    zed-editor
 
     # Nerd Fonts (required for icons in starship, eza, lazyvim)
     nerd-fonts.jetbrains-mono
