@@ -16,11 +16,11 @@
     after = [ "network.target" ];
 
     serviceConfig = {
-      # The downloaded Qwen3.5-9B-GGUF model from Ollama's cache
+      # 35B Model downloaded by the user
       ExecStart = ''
         ${unstable.llama-cpp}/bin/llama-server \
-          --model /var/lib/ollama/models/blobs/sha256-023713a5240bf58a84d2890a30deb2e0485abb5b9b9c33ba67596e9248b35f80 \
-          --alias "Qwen3.5-9B" \
+          --model /home/sanskar/Downloads/Qwen3.5-35B-A3B-heretic.Q3_K_S.gguf \
+          --alias "Qwen3.5-35B" \
           --host 127.0.0.1 \
           --port 11434 \
           --n-gpu-layers 99 \
@@ -30,6 +30,7 @@
       RestartSec = "3";
       User = "sanskar";
       Group = "users";
+      ProtectHome = pkgs.lib.mkForce false; # Allow reading the model from ~/Downloads
     };
   };
 
