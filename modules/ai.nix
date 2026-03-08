@@ -14,5 +14,8 @@
           --set __GLX_VENDOR_LIBRARY_NAME nvidia
       '';
     })
+
+    # AI Autonomous Agent
+    unstable.openclaw
   ];
 }
