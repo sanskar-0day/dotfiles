@@ -12,7 +12,7 @@
   nixpkgs.config.allowUnfree = true;
 
   # ── Boot & Kernel ──────────────────────────────────────────────
-  # Bootloader (GRUB + Sekiro theme) is configured in modules/boot.nix
+  # Using the specific kernel version that worked previously
   boot.kernelPackages = pkgs.linuxPackages_6_12;
   boot.kernelModules = [ "kvm" "kvm_amd" "iptables_nat" "ip_tables" ];
 
@@ -37,6 +37,7 @@
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
   networking.networkmanager.wifi.powersave = false;
+  systemd.services.NetworkManager-wait-online.enable = false;
 
   # ── Locale / Time ─────────────────────────────────────────────
   time.timeZone = "Asia/Kolkata";

@@ -1,72 +1,48 @@
-# 🤖 Agent's Architecture Guide
+# 🤖 Agent Architecture & Constraint Guide
 
-This document is a technical deep-dive for AI agents (like Antigravity) outlining the inner workings, dependencies, logic, and edge-case mitigations implemented across this NixOS configuration.
+This document is the absolute source of truth for AI agents interacting with this NixOS configuration. It outlines the complex interplay between different configuration modules, why certain architectural decisions were made, and constraints you MUST adhere to when executing tasks.
 
-> **CRITICAL RULE FOR ALL AGENTS**: If you modify *anything* related to theming, gaming memory allocations, home-manager bindings, or bootloader sequences, you **MUST** consult this document first. Overriding existing logic without understanding the interconnected parts will severely break the user's system.
+## ⚠️ CRITICAL CONSTRAINTS
 
-## 🏗️ Core Architecture (Flake Level)
+1. **Bootloader Integrity (`modules/boot.nix`)**: This system utilizes a highly optimized `systemd-boot` sequence. **NEVER** attempt to install GRUB, Plymouth splash screens, or modify the bootloader to include GUI themes. The system previously suffered catastrophic boot hangs due to `systemd-initrd` conflicting with Plymouth and GRUB configurations. 
+   - *Current State*: `timeout = 0`, `systemd.initrd = true`, `consoleLogLevel = 0`.
+2. **NVIDIA Driver Hot-Swapping**: Do not run `sudo nixos-rebuild switch` to apply kernel or video driver changes. Changing NVIDIA states on a live Wayland session will crash the display. You must advise the user to use `nrb` (alias for `nixos-rebuild boot`) and reboot.
+3. **Hardware Modifications**: The `hosts/nixos/hardware.nix` file includes performance modifications (`noatime` on `ext4` mounts). If you are asked to regenerate hardware configs, you must manually persist these `options = [ "noatime" ];` arrays.
 
-### 1. `flake.nix` (The Entry Point)
-- **Inputs**: Pulls `nixpkgs` (NixOS 25.11 stable), `nixpkgs-unstable` (for bleeding-edge developer tools and AI models), `home-manager` (mapped to stable), and `stylix` (system-wide theming).
-- **SpecialArgs**: Injects `unstable` and `inputs` globally into all NixOS modules (`hosts/nixos/default.nix`) and extraSpecialArgs into `home-manager` modules.
-  - *Agent Action*: To install a bleeding-edge package anywhere in the codebase, simply reference `unstable.packageName`.
-- **Mitigation - Home Manager Clobbering**: `home-manager.backupFileExtension = "bak"` is set. If the system detects a file collision during rebuild (like `~/.gtkrc-2.0` existing before Nix tries to place it), it automatically renames the existing file to `.bak` instead of failing the entire switch operation.
-- **Architectural Flow**: `nixosConfigurations.nixos` calls `./hosts/nixos/default.nix`, attaches the `stylix` NixOS Module, attaches the `home-manager` NixOS module, and directly points HM's user space configurations at `./home/sanskar/default.nix`.
+---
 
-## 🌐 Network Stability & Build Strategy (`hosts/nixos/default.nix`)
+## 🏗️ Flake Architecture (`flake.nix` & `hosts/nixos/default.nix`)
 
-The ISP in this region notoriously blocks or severely throttles `cache.nixos.org`. 
-If you simply run `nixos-rebuild`, it will hang forever.
+- **Dual-Channel Packages**: The flake imports both `nixos-25.11` (mapped to `pkgs`) and `nixos-unstable` (mapped to `unstable`). 
+- **Global Injection**: `unstable` is passed as a `specialArg` to the NixOS system and `extraSpecialArg` to Home Manager. To install bleeding-edge software anywhere in the repository, simply declare `unstable.<package_name>`.
+- **Kernel Pinning**: The system is explicitly pinned to `pkgs.linuxPackages_6_12` in `hosts/nixos/default.nix` to maintain stability with the `production` branch of the proprietary NVIDIA drivers defined in `modules/nvidia.nix`.
 
-### Nix Settings Hardening
-- **Substituters**: Explicitly ordered array of mirrors prioritising speed. `mirrors.ustc.edu.cn` (1.9s latency) sits at the top, followed by `cache.nixos.org` (1.1s latency - but prone to connection resets), then TUNA, then SJTUG.
-- **Cache Forcing**: `trusted-public-keys` specifically allows the official key so third-party mirrors can serve official signed substitutes.
-- **Agresive Timeouts**: `stalled-download-timeout` and `connect-timeout` are hardcoded to `5` seconds. If a TCP stream drops below 1 byte/sec for 5 seconds, Nix aborts that mirror and cycles down the substituter list instantly.
-- **Resource Limits**: Compiling from source (if caches fail) on a 16-core system causes an OOM kernel panic if unrestricted. `max-jobs = 4` and `cores = 4` forcefully restricts builds to use less than half the system's total processing resources.
+## 🎮 The Gaming Subsystem (`modules/gaming.nix` & `scripts/wine-run.sh`)
 
-## 🎮 The Gaming Stack (`modules/gaming.nix` & `scripts/`)
+This system relies on a delicate balance of kernel parameters and wrapper scripts to play heavily compressed Windows games seamlessly.
 
-Gaming on Linux is highly volatile. This setup supports Windows executables (specifically FitGirl / Oodle-based repacks) through a multi-layered approach.
+### The FitGirl Exception
+FitGirl repacks utilize the Oodle decompressor, which spawns thousands of threads and requires massive memory maps. Standard Linux security constraints will crash these installers immediately.
+- **The Fix**: `modules/gaming.nix` forcefully injects `boot.kernel.sysctl."vm.max_map_count" = 2147483642;` and raises `security.pam.loginLimits` for stack allocation to `unlimited`. Do not alter these sysctl parameters, or the user will lose the ability to install games.
 
-### 1. Engine Initialization (`gaming.nix`)
-- **Compatibility**: `hardware.graphics.enable32Bit = true;` unconditionally loads 32-bit Mesa and OpenGL drivers necessary for legacy Windows API calls.
-- **Wine Platform**: Uses `wineWowPackages.stagingFull`. Staging ships experimental patches (like CSMT) that are crucial for modern AAA gaming.
-- **Memory Hotfix (CRITICAL)**: FitGirl installers employ extreme Oodle multi-threaded decompression algorithms.
-  - **The Problem**: Default Linux stack sizes (8MB) and `max_map_count` (65530) instantly trigger a `Stack Overflow` exception in Wine (`Unhandled exception: stack overflow inside wine-10.20-staging`).
-  - **The Solution**: The kernel `vm.max_map_count` is forcibly raised to `2147483642`. User `security.pam.loginLimits` are elevated to allow `item = "stack"; value = "unlimited"`.
+### Headless MIME Execution
+- **Logic Flow**: In `home/sanskar/default.nix`, `xdg.mimeApps` binds `.exe` extensions to a custom `.desktop` entry named `wine-run`.
+- **Execution**: The script `scripts/wine-run.sh` acts as a hypervisor. If a user double-clicks an executable, the script dynamically spawns a localized WINEPREFIX in the parent directory, auto-injects `dxvk` and `vcrun2022` via unattended `winetricks`, sets the process `ulimit -s unlimited`, and launches the binary via `wineWowPackages.stagingFull`.
 
-### 2. Auto EXE Handler Logic (`home/sanskar/default.nix` & `scripts/wine-run.sh`)
-- **The Wrapper**: `scripts/wine-run.sh` wraps the `wine` binary. It parses the parent folder of the `.exe`, and provisions a totally isolated Wine prefix (`$HOME/Games/wine-<foldername>`).
-- **Dependency Bootstrap**: If it detects the prefix is empty, it runs an unattended `winetricks -q vcrun2022 dxvk d3dcompiler_47 corefonts`. This guarantees Vulcan translation and Microsoft runtimes are injected before the game UI even loads. It executes `ulimit -s unlimited` immediately prior to `wine setup.exe`.
-- **MIME Hijacking**: `default.nix` invokes `xdg.desktopEntries` and `xdg.mimeApps` to map the custom wrapper script to `application/x-ms-dos-executable` and `application/x-msdownload`. 
-- **The Result**: A user can blindly double-click any `setup.exe` in KDE Dolphin, and all the Linux-side complexity abstraction handles itself.
-- **Agent Action**: If Home Manager ever throws `Existing file '/home/sanskar/.config/mimeapps.list' would be clobbered`, understand that `.bak` mapping failed because a previous `.bak` already exists. The system relies on `xdg.configFile."mimeapps.list".force = true;` to overwrite it ruthlessly.
+## 💻 Developer & Editor Design
 
-## 🎨 Design Systems (`modules/stylix.nix` & `modules/boot.nix`)
+### Neovim Separation of Concerns (`home/sanskar/nvim.nix`)
+This repository breaks standard Nix conventions regarding Neovim.
+- **Rule**: NEVER attempt to install Neovim plugins using `programs.neovim.plugins = [ pkgs.vimPlugins... ]`. 
+- **The Rationale**: The user relies on **LazyVim**, which requires read-write access to its own state directories (`~/.local/share/nvim/lazy`) to hot-load plugins. 
+- **The Nix Role**: Nix is used strictly to provision the system-level binary dependencies required by the plugins. Compilers, LSP servers (e.g., `nil`, `ruff`, `zls`), and formatters (e.g., `black`, `stylua`) are injected via `programs.neovim.extraPackages`.
+- **The Link**: The Lua configuration is mapped entirely outside the Nix store via `xdg.configFile."nvim/init.lua".source = ./nvim/init.lua;`.
 
-There are deliberate overlapping design systems that an Agent must navigate carefully.
+### Shell Environment (`home/sanskar/shell.nix`)
+- **Fuzzy Finders**: The user has custom ZSH functions (`ns` and `nu`) that pipeline `nix search`, `jq`, and `fzf` together for instant terminal package searching. If modifying shell dependencies, ensure `jq` and `fzf` remain in the environment.
+- **Multi-Account Swap**: A custom `swap-gemini` bash function allows the user to rotate OAuth credentials for the Gemini CLI by symlinking JSON profiles located in `~/.config/gemini/profiles/`.
 
-### 1. Stylix (The UI Dominator)
-- **Base16**: Driven entirely by a single wallpaper (`../images/romantic-night-sky`) mapped to the `Dracula` base16 YAML scheme.
-- **Reach**: Stylix forces KDE Plasma (Global Theme, Colors, Window Decorations), GTK3/GTK4, Alacritty/Kitty, Neovim, and all CLI utilities (`bat`, `btop`, `fzf`, `lazygit`, Starship) to conform instantly.
-- **Agent Action**: NEVER manually configure `config.theme` or `color_theme` inside variables for supporting tools (e.g. `programs.btop.settings.color_theme` in `home/tools.nix`). If you do so without invoking `lib.mkDefault`, you will trigger a Nix evaluation conflict. Let Stylix manage the variables organically.
-
-### 2. Boot Sequence Exclusion Zone
-- **The Conflict**: Stylix attempts to theme the bootloader by default.
-- **The Override**: `stylix.targets.plymouth.enable = false;` and `stylix.targets.grub.enable = false;` actively reject the Stylix bootloader logic.
-- **The Reality**: The user relies heavily on a 1080p Sekiro Anime derivation (`sekiroGrubTheme` defined in `boot.nix`). The Plymouth splash screen uses `boot.plymouth.theme = "lone"` relying directly on the `adi1090x-plymouth-themes` package override mapped against the `lone` loader. 
-
-## 🛡️ Operational Workflows (`home/sanskar/shell.nix`)
-
-> **WARNING**: Never advise the user to run `sudo nixos-rebuild switch`.
-
-### `nrs` vs `nrs-live` Context
-NVIDIA drivers completely crash X11/Wayland sessions during kernel module hot-reloads (which `.target` reactivation hooks trigger during a `switch`). 
-- **`nrs`**: Bound to `sudo nixos-rebuild boot`. Installs the configuration to `/run/current-system/` safely, skipping the systemd reload. The user must manually reboot, but their live display is protected.
-- **`nrs-live`**: Bound to the original `switch`. Included strictly for testing non-graphics changes or when a display failure is acceptable. 
-- *Both commands automatically append `--fallback` to guarantee execution if the USTC cache drops packets midway.*
-
-### Hybrid Neovim Ecosystem (`nvim.nix` vs `lua/`)
-The system does not manage Neovim plugins via `nixpkgs`. It manages binary LSPs, formatters, and compilers via `extraPackages` mapped directly against the Neovim derivation path. 
-`xdg.configFile."nvim/lua/"` symlinks user-space Lua files out of standard Nix read-only store isolation.
-This allows the plugin manager (`lazy.nvim`) to load locally, providing lightning-fast startup cache mechanisms (`~/.local/share/nvim/lazy/`), while letting Nix provide unbreakable syntax trees (e.g. `pkgs.tree-sitter`).
+## 🌐 Network & Build Optimization
+- **Aggressive Mirrors**: The user resides in a region where standard Nix caches frequently stall. `hosts/nixos/default.nix` implements an explicit array of substituters prioritizing `ustc.edu.cn` and `tuna.tsinghua.edu.cn` over `cache.nixos.org`. 
+- **Timeouts**: `stalled-download-timeout` is locked to 5 seconds to force the Nix daemon to rapidly cycle to the next mirror rather than hanging the build.
+- **Resource Limits**: Local compiling is throttled to `max-jobs = 4` and `cores = 4` to prevent OOM panics on the 16-core CPU.

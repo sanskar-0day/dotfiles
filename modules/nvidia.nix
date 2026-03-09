@@ -8,6 +8,7 @@
     powerManagement.finegrained = false;
     open = false;
     nvidiaSettings = true;
+    # Matches the previously working configuration for best stability
     package = config.boot.kernelPackages.nvidiaPackages.production;
     prime = {
       offload.enable = true;

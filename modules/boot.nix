@@ -1,44 +1,44 @@
 { config, pkgs, ... }:
 
-
 {
   # ── systemd-boot ───────────────────────────────────────────────
-  # The default NixOS systemd-bootloader. Drastically faster than GRUB.
+  # Fast, simple, and reliable UEFI bootloader.
   boot.loader = {
+    systemd-boot = {
+      enable = true;
+      editor = false;
+      configurationLimit = 10;
+      # Use maximum resolution for the console to avoid mode switches
+      consoleMode = "max";
+    };
     efi = {
       canTouchEfiVariables = true;
       efiSysMountPoint = "/boot";
     };
-
-    systemd-boot = {
-      enable = true;
-      editor = false;         # Disable the editor for security and speed
-      configurationLimit = 10;
-    };
-
-    # 0 seconds to pick a generation — instant boot into the active OS
+    # Set to 0 for instant boot. Hold SPACE during boot to see the menu.
     timeout = 0;
   };
 
+  # ── Safe & Fast Boot ──────────────────────────────────────────
+  # Using systemd in initrd is faster as it parallelizes module loading.
+  boot.initrd.systemd = {
+    enable = true;
+    emergencyAccess = true; # Safety: Allow root shell on failure
+  };
 
-
-  # ── Silent & Fast Boot ────────────────────────────────────────
+  # ── Boot Verbosity ────────────────────────────────────────────
   boot.consoleLogLevel = 0;
   boot.initrd.verbose = false;
 
-  # Replace legacy bash initrd with hyper-fast parallel Systemd initrd
-  boot.initrd.systemd.enable = true;
-  boot.loader.grub.enable = false;
-
   boot.kernelParams = [
     "quiet"
-    "splash"
     "loglevel=3"
-    "rd.systemd.show_status=false"
+    "rd.systemd.show_status=auto" # Only show status on failure
     "rd.udev.log_level=3"
     "udev.log_priority=3"
-    "boot.shell_on_fail"
-    "nowatchdog"        # Skip hardware watchdog timer probing
+    "boot.shell_on_fail"         # Safety: Drop to shell if boot fails
+    "nowatchdog"
+    "fastboot"                   # Skip minor filesystem checks
   ];
 
   # ── Faster Shutdown ───────────────────────────────────────────

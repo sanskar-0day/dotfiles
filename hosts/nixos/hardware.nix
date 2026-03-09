@@ -16,6 +16,7 @@
   fileSystems."/" =
     { device = "/dev/disk/by-uuid/aaafedd5-5374-4626-9fa5-9453f0b3f362";
       fsType = "ext4";
+      options = [ "noatime" ];
     };
 
   fileSystems."/boot" =
@@ -26,6 +27,7 @@
   fileSystems."/home" =
     { device = "/dev/disk/by-uuid/05be612f-75b6-447d-8ae6-c21c188f6356";
       fsType = "ext4";
+      options = [ "noatime" ];
     };
 
   swapDevices =
