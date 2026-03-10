@@ -19,7 +19,7 @@
     firefox
     kdePackages.spectacle
     kdePackages.polkit-kde-agent-1
-    kdePackages.plasma-nm
+    kdePackages.plasma-nm ncdu
     nvtopPackages.full
     mesa-demos
     winboat
@@ -28,7 +28,9 @@
     fastfetch
     telegram-desktop
     vlc
-    ncdu
+    code-cursor
+    windsurf
+
 
     # Nerd Fonts (required for icons in starship, eza, lazyvim)
     nerd-fonts.jetbrains-mono
@@ -67,6 +69,12 @@
       "application/x-ms-dos-executable" = [ "wine-run.desktop" ];
       "application/x-msdos-program" = [ "wine-run.desktop" ];
       "application/x-msdownload" = [ "wine-run.desktop" ];
+      # Use Zen Browser (Flatpak) as the default browser
+      "text/html" = [ "app.zen_browser.zen.desktop" ];
+      "x-scheme-handler/http" = [ "app.zen_browser.zen.desktop" ];
+      "x-scheme-handler/https" = [ "app.zen_browser.zen.desktop" ];
+      "x-scheme-handler/about" = [ "app.zen_browser.zen.desktop" ];
+      "x-scheme-handler/unknown" = [ "app.zen_browser.zen.desktop" ];
     };
   };
 

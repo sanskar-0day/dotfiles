@@ -7,7 +7,7 @@
     systemd-boot = {
       enable = true;
       editor = false;
-      configurationLimit = 10;
+      configurationLimit = 20;
       # Use maximum resolution for the console to avoid mode switches
       consoleMode = "max";
     };
@@ -24,6 +24,7 @@
   boot.initrd.systemd = {
     enable = true;
     emergencyAccess = true; # Safety: Allow root shell on failure
+    #tty = false;            # Skip TTY setup during boot
   };
 
   # ── Boot Verbosity ────────────────────────────────────────────
@@ -38,6 +39,8 @@
     "udev.log_priority=3"
     "boot.shell_on_fail"         # Safety: Drop to shell if boot fails
     "nowatchdog"
+
+
     "fastboot"                   # Skip minor filesystem checks
   ];
 
