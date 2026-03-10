@@ -44,6 +44,7 @@
   xdg.configFile = {
     "fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
     "fastfetch/logo.txt".source = ./fastfetch/logo.txt;
+    "fastfetch/ghost.png".source = ../../images/ghost.png;
   };
 
   # ── Wine .exe handler ─────────────────────────────────────────
