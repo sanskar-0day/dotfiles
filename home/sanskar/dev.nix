@@ -6,6 +6,9 @@
     python313
     python313Packages.pip
     python313Packages.virtualenv
+    python313Packages.flask
+    python313Packages.sqlalchemy
+    python313Packages.werkzeug
     uv                      # Ultra-fast Python package manager
 
     # Common Lisp

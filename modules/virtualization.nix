@@ -12,6 +12,7 @@
     qemu = {
       package = pkgs.qemu_kvm;
       swtpm.enable = true;           # TPM emulation for Windows 11
+      runAsRoot = true; # Sometimes needed for certain performance tweaks
     };
   };
 
@@ -21,5 +22,7 @@
   environment.systemPackages = with pkgs; [
     distrobox
     spice-gtk          # USB redirection in VMs
+    virt-viewer        # Better spice viewer
+    virtio-win         # ISO with Windows VirtIO drivers
   ];
 }

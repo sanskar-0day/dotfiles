@@ -4,7 +4,7 @@
 
   hardware.nvidia = {
     modesetting.enable = true;
-    powerManagement.enable = true;
+    powerManagement.enable = false; # keep GPU fully awake for max performance
     powerManagement.finegrained = false;
     open = false;
     nvidiaSettings = true;
@@ -23,4 +23,5 @@
     enable32Bit = true;
     extraPackages = [ pkgs.nvidia-vaapi-driver ];
   };
+
 }

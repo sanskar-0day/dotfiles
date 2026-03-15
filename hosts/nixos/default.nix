@@ -19,13 +19,15 @@
   # Blacklist conflicting drivers
   boot.blacklistedKernelModules = [
     "nouveau"
-    "mt7921e" "mt7921_common"
-    "rtw88_8822bu" "rtw88_8822b"
+    "mt7921e" "mt7921_common"  # Internal MediaTek WiFi
+    "rtw88_8822bu" "rtw88_8822b" "rtw_8822bu" # Default kernel driver for 8822BU
   ];
 
   boot.extraModprobeConfig = ''
     options ieee80211 powersave=0
     options cfg80211 ieee80211_regdom=IN
+    # Push TP-Link T3U Plus (rtl88x2bu) to absolute limits
+    options 88x2bu rtw_drv_log_level=1 rtw_led_ctrl=1 rtw_vht_enable=1 rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1
   '';
 
   hardware.enableRedistributableFirmware = true;
@@ -44,9 +46,48 @@
   i18n.defaultLocale = "en_US.UTF-8";
 
   # ── Services ───────────────────────────────────────────────────
-  services.openssh.enable = true;
+  services.openssh.enable = false;
   services.flatpak.enable = true;
-  services.cloudflare-warp.enable = true;
+  services.cloudflare-warp.enable = false;
+  services.avahi.enable = false;
+  services.printing.enable = false;
+  services.geoclue2.enable = false;
+  services.packagekit.enable = false;
+  services.fstrim.enable = true;
+
+  # Bluetooth support
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.powerOnBoot = true;
+  services.blueman.enable = false;
+
+  # Laptop Power Management
+  services.auto-cpufreq.enable = false;
+  services.power-profiles-daemon.enable = true;
+  services.udev.extraRules = ''
+    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}="power-profile-ac.service"
+    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", TAG+="systemd", ENV{SYSTEMD_WANTS}="power-profile-battery.service"
+  '';
+
+  systemd.services.power-profile-ac = {
+    description = "Set power profile to performance on AC";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.power-profiles-daemon}/bin/powerprofilesctl set performance";
+    };
+  };
+
+  systemd.services.power-profile-battery = {
+    description = "Set power profile to balanced on battery";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.power-profiles-daemon}/bin/powerprofilesctl set balanced";
+    };
+  };
+
+  # Touchpad support
+  services.libinput.enable = true;
+  services.libinput.touchpad.tapping = true;
+  services.libinput.touchpad.naturalScrolling = true;
 
   # Kanata – always-active keyboard remapper
   services.kanata = {
@@ -60,8 +101,21 @@
 
   # Steam is configured in modules/gaming.nix
 
-  # Zsh (required for it to work as login shell)
+  # Zsh must be enabled at system level for user shells to work
+  # Home Manager manages the config, NixOS provides the shell
   programs.zsh.enable = true;
+
+  # Nix Helper (Clean CLI for rebuilds)
+  programs.nh = {
+    enable = true;
+    clean.enable = true;
+    clean.extraArgs = "--keep-since 4d --keep 3";
+    flake = "/home/sanskar/dotfiles";
+  };
+
+  # Nix-LD (Run un-patched binaries, essential for AI tools/LSPs)
+  programs.nix-ld.enable = false;
+  services.envfs.enable = false;
 
   # ── User ───────────────────────────────────────────────────────
   users.users.sanskar = {
@@ -82,6 +136,7 @@
 
     # Services
     kanata cloudflare-warp
+    home-manager
 
     # AI Coding Tools (global from unstable)
     unstable.codex
@@ -106,10 +161,10 @@
     http-connections = 8;
     auto-optimise-store = true;
 
-    # Mirrors ordered by speed (tested from your connection)
+    # Mirrors ordered by reliability and then speed
     substituters = [
+      "https://cache.nixos.org"                                    # 1.1s ✓ (Most reliable)
       "https://mirrors.ustc.edu.cn/nix-channels/store"            # 1.9s ✓
-      "https://cache.nixos.org"                                    # 1.1s ✓
       "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"   # 2.1s ✓
       "https://mirror.sjtu.edu.cn/nix-channels/store"             # 3.8s ✓
     ];
@@ -122,11 +177,9 @@
     connect-timeout = 5;
   };
 
-  # ── Garbage Collection (every 15 days) ────────────────────────
+  # ── Garbage Collection (Handled by nh) ────────────────────────
   nix.gc = {
-    automatic = true;
-    dates = "*-*-1,15 03:00:00";  # 1st and 15th of each month at 3am
-    options = "--delete-older-than 15d";
+    automatic = false;
   };
 
   system.stateVersion = "25.11";

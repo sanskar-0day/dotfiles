@@ -25,6 +25,10 @@
     }@inputs:
     let
       system = "x86_64-linux";
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
       unstable = import nixpkgs-unstable {
         inherit system;
         config.allowUnfree = true;
@@ -43,12 +47,19 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "hm-backup";
             home-manager.users.sanskar = import ./home/sanskar;
 
             # Pass pkgs-unstable to home-manager
             home-manager.extraSpecialArgs = { inherit inputs unstable; };
           }
         ];
+      };
+
+      homeConfigurations.sanskar = home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        extraSpecialArgs = { inherit inputs unstable; };
+        modules = [ ./home/sanskar ];
       };
     };
 }

@@ -14,6 +14,9 @@
     ./dev.nix # IDEs, Languages
   ];
 
+  home.username = "sanskar";
+  home.homeDirectory = "/home/sanskar";
+
   # User-specific packages
   home.packages = with pkgs; [
     firefox
@@ -23,14 +26,9 @@
     nvtopPackages.full
     mesa-demos
     winboat
-    freerdp
     unstable.antigravity
     fastfetch
-    telegram-desktop
-    vlc
-    code-cursor
-    windsurf
-
+    unstable.zed-editor-fhs
 
     # Nerd Fonts (required for icons in starship, eza, lazyvim)
     nerd-fonts.jetbrains-mono
@@ -47,35 +45,14 @@
     "fastfetch/ghost.png".source = ../../images/ghost.png;
   };
 
-  # ── Wine .exe handler ─────────────────────────────────────────
-  # Double-click any .exe → auto-creates prefix, installs deps, runs it
-  xdg.desktopEntries.wine-run = {
-    name = "Wine (Auto Prefix)";
-    comment = "Run Windows .exe with auto prefix + DXVK";
-    exec = "/home/sanskar/dotfiles/scripts/wine-run.sh %f";
-    icon = "wine";
-    terminal = false;
-    type = "Application";
-    categories = [ "Game" ];
-    mimeType = [
-      "application/x-ms-dos-executable"
-      "application/x-msdos-program"
-      "application/x-msdownload"
-    ];
-  };
-
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
-      "application/x-ms-dos-executable" = [ "wine-run.desktop" ];
-      "application/x-msdos-program" = [ "wine-run.desktop" ];
-      "application/x-msdownload" = [ "wine-run.desktop" ];
-      # Use Zen Browser (Flatpak) as the default browser
-      "text/html" = [ "app.zen_browser.zen.desktop" ];
-      "x-scheme-handler/http" = [ "app.zen_browser.zen.desktop" ];
-      "x-scheme-handler/https" = [ "app.zen_browser.zen.desktop" ];
-      "x-scheme-handler/about" = [ "app.zen_browser.zen.desktop" ];
-      "x-scheme-handler/unknown" = [ "app.zen_browser.zen.desktop" ];
+      "text/html" = [ "firefox.desktop" ];
+      "x-scheme-handler/http" = [ "firefox.desktop" ];
+      "x-scheme-handler/https" = [ "firefox.desktop" ];
+      "x-scheme-handler/about" = [ "firefox.desktop" ];
+      "x-scheme-handler/unknown" = [ "firefox.desktop" ];
     };
   };
 

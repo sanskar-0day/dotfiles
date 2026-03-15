@@ -15,8 +15,8 @@
       canTouchEfiVariables = true;
       efiSysMountPoint = "/boot";
     };
-    # Set to 0 for instant boot. Hold SPACE during boot to see the menu.
-    timeout = 0;
+    # Set to 1s for a brief selection window.
+    timeout = 1;
   };
 
   # ── Safe & Fast Boot ──────────────────────────────────────────
@@ -38,6 +38,10 @@
     "rd.systemd.show_status=auto" # Only show status on failure
     "rd.udev.log_level=3"
     "udev.log_priority=3"
+    # Faster boot: skip unnecessary checks
+    "fastboot"                   # Skip some GPU/Disk checks
+    "noresume"                   # Skip looking for swap resume (unless you use hibernation)
+    "mitigations=off"            # (OPTIONAL/SPEED) Disable CPU security mitigations for ~5-10% speed boost
     # Safety: Drop to shell if boot fails (kept per README)
     "boot.shell_on_fail"
   ];
@@ -50,8 +54,8 @@
   # ── Systemd Optimizations for Faster Boot ────────────────────
   systemd.settings.Manager = {
     # Faster service startup
-    DefaultTimeoutStartSec = "10s";
-    DefaultTimeoutStopSec = "10s";
+    DefaultTimeoutStartSec = "5s";
+    DefaultTimeoutStopSec = "5s";
     # Allow more parallel service starts
     DefaultTasksMax = "infinity";
   };

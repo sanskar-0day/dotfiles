@@ -10,6 +10,17 @@
       gcc gnumake
       ripgrep fd
       tree-sitter            # Treesitter CLI (auto grammar install)
+      
+      # ── AI Tool Deps ──────────────────────────────────────
+      pkg-config             # For building avante.nvim native libs
+      cargo                  # For building avante.nvim native libs
+      nodejs_20              # For copilot.lua and neocodeium
+      lua5_1                 # For avante.nvim dependencies
+      luajitPackages.luarocks-nix # For building lua dependencies
+      sqlite                 # For codecompanion / avante databases
+      curl                   # AI API communication
+      openssl                # TLS for API calls
+      unzip                  # Unzipping assets/LSPs if needed
 
       # ── LSP Servers ────────────────────────────────────────
       lua-language-server    # Lua
@@ -23,6 +34,8 @@
       taplo                  # TOML
       yaml-language-server   # YAML
       marksman               # Markdown
+      sbcl
+      
 
       # ── Formatters (used by conform.nvim) ──────────────────
       black                  # Python

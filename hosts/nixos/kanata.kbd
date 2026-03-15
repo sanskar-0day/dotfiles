@@ -2,11 +2,14 @@
 ;; Kanata Configuration – Ultimate Home-Row-Centric Layout
 ;; =============================================================================
 ;; Modifiers:
+;;   Home Row Mods (A S D F / J K L ;)
 ;;   CapsLock : tap = Esc, hold = Nav layer
 ;;   RightAlt : tap = Right Alt, hold = NumSym layer
 ;;   Tab      : tap = Tab, hold = System layer (mouse + media)
 ;;
-;; All other keys (Shift, Ctrl, Super, etc.) work normally.
+;; This configuration uses Home Row Modifiers:
+;;   A -> Super (Cmd/Meta) | S -> Alt | D -> Ctrl | F -> Shift
+;;   J -> Shift | K -> Ctrl | L -> Alt | ; -> Super (Cmd/Meta)
 ;; =============================================================================
 
 (defsrc
@@ -17,8 +20,6 @@
   ret   bspc
 )
 
-
-
 ;; -----------------------------------------------------------------------------
 ;; Aliases for common actions
 ;; -----------------------------------------------------------------------------
@@ -28,6 +29,18 @@
   meta  (tap-hold 200 200 ralt (layer-while-held numsym))
   sys   (tap-hold 200 200 tab  (layer-while-held system))
 
+  ;; Home Row Modifiers (Left)
+  a_mod (tap-hold 200 200 a lmet)
+  s_mod (tap-hold 200 200 s lalt)
+  d_mod (tap-hold 200 200 d lctl)
+  f_mod (tap-hold 200 200 f lsft)
+
+  ;; Home Row Modifiers (Right)
+  j_mod (tap-hold 200 200 j rsft)
+  k_mod (tap-hold 200 200 k rctl)
+  l_mod (tap-hold 200 200 l ralt)
+  sem_mod (tap-hold 200 200 scln rmet)
+
   ;; Media keys
   voldown vold
   volup   volu
@@ -36,12 +49,6 @@
   prev    prev
   next    next
   media   media
-
-  ;; System keys
-  prtsc   prtsc
-  scrlk   slck
-  pause   pause
-  menu    menu
 
   ;; Mouse actions (faster 30px steps, 3‑line scroll)
   mleft   (movemouse-left 30 30)
@@ -74,16 +81,22 @@
   rc S-]
   bs \
   pi S-\
+
+  ;; System keys
+  prtsc   prtsc
+  scrlk   slck
+  pause   pause
+  menu    menu
 )
 
 ;; -----------------------------------------------------------------------------
 ;; BASE LAYER – normal typing
 ;; -----------------------------------------------------------------------------
 (deflayer base
-  @hyper  a   s   d   f   g   h   j   k   l   scln  apos
-  @sys    q   w   e   r   t   y   u   i   o   p   lbrc  rbrc
-  lsft    z   x   c   v   b   n   m   comm  .   /  rsft
-  lctl    lmet  lalt  spc   @meta  rmet  rctl
+  @hyper  @a_mod  @s_mod  @d_mod  @f_mod  g   h   @j_mod  @k_mod  @l_mod  @sem_mod  apos
+  @sys    q       w       e       r       t   y   u       i       o       p         lbrc  rbrc
+  lsft    z       x       c       v       b   n   m       comm    .       /         rsft
+  lctl    lmet    lalt    spc     @meta   rmet  rctl
   ret     bspc
 )
 

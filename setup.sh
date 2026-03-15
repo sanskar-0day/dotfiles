@@ -42,12 +42,14 @@ else
   echo "  Then copy /etc/nixos/hardware-configuration.nix to $DOTFILES_DIR/hosts/nixos/hardware.nix"
 fi
 
-# 5. Build and switch
-echo "[5/5] Building and switching to new config..."
+# 5. Build (boot entry) for safe NVIDIA updates
+echo "[5/5] Building boot entry (safe for NVIDIA)..."
 echo ""
-echo "Ready! Run the following command to apply:"
+echo "Ready! Run the following command to build a boot entry:"
 echo ""
-echo "  sudo nixos-rebuild switch --flake $DOTFILES_DIR#$FLAKE_NAME"
+echo "  sudo nixos-rebuild boot --flake $DOTFILES_DIR#$FLAKE_NAME"
 echo ""
-echo "After reboot, run 'gh auth login' to set up GitHub."
+echo "Reboot to apply the new generation."
+echo "After reboot, run 'home-manager switch --flake $DOTFILES_DIR#sanskar' if needed."
+echo "Then run 'gh auth login' to set up GitHub."
 echo "══════════════════════════════════════════════"
