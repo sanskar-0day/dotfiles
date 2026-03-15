@@ -1,0 +1,46 @@
+# ── Zsh Environment Check ─────────────────────────────────
+# Prevent Bash from trying to parse this file
+if [ -z "$ZSH_VERSION" ]; then return; fi
+
+# Environment Variables
+export NH_FLAKE="$HOME/dotfiles"
+
+# Edit command line in $EDITOR with Ctrl-E
+autoload -z edit-command-line
+zle -N edit-command-line
+bindkey "^e" edit-command-line
+
+# Rich Completions
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*:descriptions' format '%F{yellow}── %d ──%f'
+zstyle ':completion:*:warnings' format '%F{red}No matches%f'
+
+# Accept autosuggestion with Ctrl-Space
+bindkey '^ ' autosuggest-accept
+
+# Fuzzy Nix Package Search
+ns() {
+  nix search nixpkgs#"$1" --json 2>/dev/null \
+    | jq -r 'to_entries[] | "\(.key)\t\(.value.description)"' \
+    | column -t -s $'\t' \
+    | fzf --ansi --preview 'echo {}' --header "Stable Packages"
+}
+
+nu() {
+  nix search github:NixOS/nixpkgs/nixos-unstable#"$1" --json 2>/dev/null \
+    | jq -r 'to_entries[] | "\(.key)\t\(.value.description)"' \
+    | column -t -s $'\t' \
+    | fzf --ansi --preview 'echo {}' --header "Unstable Packages"
+}
+
+ni() { nix shell nixpkgs#"$1"; }
+
+# Quick Edit Dotfiles
+dots() { cd ~/dotfiles && $EDITOR .; }
+
+# Fastfetch on launch
+if [ -z "$TMUX" ] && [ "x$-" = "xi" ] && command -v fastfetch >/dev/null 2>&1; then
+  fastfetch --config "$HOME/.config/fastfetch/config.jsonc"
+fi
