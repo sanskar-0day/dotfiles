@@ -28,7 +28,11 @@
     winboat
     unstable.antigravity
     fastfetch
+    telegram-desktop
+    vlc
+    freerdp
     unstable.zed-editor-fhs
+    unstable.code-cursor
 
     # Nerd Fonts (required for icons in starship, eza, lazyvim)
     nerd-fonts.jetbrains-mono

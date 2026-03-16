@@ -48,7 +48,7 @@
   # ── Services ───────────────────────────────────────────────────
   services.openssh.enable = false;
   services.flatpak.enable = true;
-  services.cloudflare-warp.enable = false;
+  services.cloudflare-warp.enable = true;
   services.avahi.enable = false;
   services.printing.enable = false;
   services.geoclue2.enable = false;
