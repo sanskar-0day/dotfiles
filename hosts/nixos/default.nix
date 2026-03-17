@@ -19,7 +19,6 @@
   # Blacklist conflicting drivers
   boot.blacklistedKernelModules = [
     "nouveau"
-    "mt7921e" "mt7921_common"  # Internal MediaTek WiFi
     "rtw88_8822bu" "rtw88_8822b" "rtw_8822bu" # Default kernel driver for 8822BU
   ];
 
@@ -38,8 +37,19 @@
   # ── Networking ─────────────────────────────────────────────────
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
+  networking.networkmanager.wifi.backend = "iwd";
   networking.networkmanager.wifi.powersave = false;
   systemd.services.NetworkManager-wait-online.enable = false;
+
+  networking.wireless.iwd.enable = true;
+  networking.wireless.iwd.settings = {
+    General = {
+      EnableNetworkConfiguration = true;
+    };
+    Settings = {
+      AutoConnect = true;
+    };
+  };
 
   # ── Locale / Time ─────────────────────────────────────────────
   time.timeZone = "Asia/Kolkata";
@@ -133,16 +143,23 @@
     # Core tools
     vim wget git neovim gcc gnumake
     pciutils usbutils
+    iw ethtool rfkill
 
     # Services
     kanata cloudflare-warp
     home-manager
+    typst
 
     # AI Coding Tools (global from unstable)
     unstable.codex
     unstable.gemini-cli
     unstable.qwen-code
     unstable.opencode
+  ];
+
+  # Fonts for Typst/PDF output
+  fonts.packages = with pkgs; [
+    libertinus
   ];
 
   # ── Swap & Performance ────────────────────────────────────────

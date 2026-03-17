@@ -33,6 +33,86 @@
     freerdp
     unstable.zed-editor-fhs
     unstable.code-cursor
+    # Typst ecosystem
+    typst-live
+    typstwriter
+    tinymist
+    prettypst
+    typship
+    typesetter
+    typewriter
+    typstPackages.cetz
+    typstPackages.tbl
+    typstPackages.tblr
+    typstPackages.algo
+    typstPackages.algorithmic
+    typstPackages.lovelace
+    typstPackages.codly
+    typstPackages.finite
+    typstPackages.bytefield
+    typstPackages.plotst
+    typstPackages.physica
+    typstPackages.mitex
+    typstPackages.fletcher
+    typstPackages.pinit
+    typstPackages.tasteful-pairings
+    typstPackages.touying
+    typstPackages.polylux
+    typstPackages.diatypst
+    typstPackages.grape-suite
+    typstPackages.modern-cv
+    typstPackages.clickworthy-resume
+    typstPackages.brilliant-cv
+    typstPackages.tablex
+    typstPackages.showybox
+    typstPackages.chicv
+    typstPackages.academicv
+    typstPackages.gviz
+    typstPackages.tidy
+    typstPackages.glossarium
+    typstPackages.hydra
+    typstPackages.typslides
+    typstPackages.presentate
+    typstPackages.minideck
+    typstPackages.lineal
+    typstPackages.leonux
+    typstPackages.slydst
+    typstPackages.gloat
+    typstPackages.neat-cv
+    typstPackages.toy-cv
+    typstPackages.kiresume
+    typstPackages.light-cv
+    typstPackages.pesha
+    typstPackages.imprecv
+    typstPackages.porygon
+    typstPackages.swe-cv
+    typstPackages.chuli-cv
+    typstPackages.mahou-cv
+    typstPackages.equate
+    typstPackages.ouset
+    typstPackages.natrix
+    typstPackages.ezchem
+    typstPackages.eqalc
+    typstPackages.scribe
+    typstPackages.m-jaxon
+    typstPackages.tinyset
+    typstPackages.mannot
+    typstPackages.ergo
+    typstPackages.zebraw
+    typstPackages.idwtet
+    typstPackages.nassi
+    typstPackages.wavy
+    typstPackages.zap
+    typstPackages.quill
+    typstPackages.km
+    typstPackages.atomic
+    typstPackages.booktabs
+    typstPackages.tablem
+    typstPackages.pillar
+    typstPackages.tabut
+    typstPackages.tada
+    typstPackages.spreet
+    typstPackages.truthfy
 
     # Nerd Fonts (required for icons in starship, eza, lazyvim)
     nerd-fonts.jetbrains-mono

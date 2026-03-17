@@ -40,6 +40,25 @@ ni() { nix shell nixpkgs#"$1"; }
 # Quick Edit Dotfiles
 dots() { cd ~/dotfiles && $EDITOR .; }
 
+# WiFi driver toggle (external RTL8822BU ↔ internal MediaTek)
+wifi-mt() {
+  echo "Switching to MediaTek (mt7921e)..." >&2
+  sudo rfkill unblock wifi
+  sudo modprobe -r 88x2bu 2>/dev/null || true
+  sudo modprobe mt7921_common 2>/dev/null || true
+  sudo modprobe mt7921e 2>/dev/null || true
+  sudo systemctl restart NetworkManager
+}
+
+wifi-fix() {
+  echo "Switching back to RTL8822BU (88x2bu)..." >&2
+  sudo rfkill unblock wifi
+  sudo modprobe -r mt7921e 2>/dev/null || true
+  sudo modprobe -r mt7921_common 2>/dev/null || true
+  sudo modprobe 88x2bu 2>/dev/null || true
+  sudo systemctl restart NetworkManager
+}
+
 # Fastfetch on launch
 if [ -z "$TMUX" ] && [ "x$-" = "xi" ] && command -v fastfetch >/dev/null 2>&1; then
   fastfetch --config "$HOME/.config/fastfetch/config.jsonc"
