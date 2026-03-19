@@ -3,23 +3,35 @@
   services.xserver.enable = true;
   services.libinput.enable = true;
   services.displayManager.sddm.enable = true;
-  services.displayManager.sddm.wayland.enable = false;
+  # SDDM Wayland is much smoother in Plasma 6
+  services.displayManager.sddm.wayland.enable = true;
   services.displayManager.defaultSession = "plasma";
   services.desktopManager.plasma6.enable = true;
 
-  # ── Plasma 6 Optimizations ───────────────────────────────────
-  # Disable the splash screen for near-instant desktop entry
+  # ── Plasma 6 & Nvidia Optimizations ─────────────────────────
   environment.sessionVariables = {
-    # Fix Nvidia flickering/lag in Plasma 6 (artifacting)
+    # Fix Nvidia flickering/lag in Plasma 6
     KWIN_DRM_USE_MODIFIERS = "0";
-    # Force Plasma to use high-performance rendering paths
+    # Force Wayland for specific apps to avoid XWayland overhead
+    NIXOS_OZONE_WL = "1";
+    MOZ_ENABLE_WAYLAND = "1";
+    # Smoothness tweaks
+    KWIN_X11_NO_SYNC_TO_VBLANK = "0"; # Prevent tearing
     __GL_GSYNC_ALLOWED = "1";
     __GL_VRR_ALLOWED = "1";
-    # Fix KDE Startup Lag (Wait less for some services)
+    # Reduce Plasma start-up time
     KDE_SESSION_UID = "1";
   };
 
-  # Audio ─────────────────────────────────────────────────────
+  # Disable Baloo (File Indexing) - Major source of stutter and disk I/O
+  systemd.user.services.baloo = {
+    description = "KDE Baloo File Indexer (Disabled for performance)";
+    serviceConfig = {
+      ExecStart = "${pkgs.coreutils}/bin/true";
+    };
+  };
+
+  # ── Audio ─────────────────────────────────────────────────────
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -29,32 +41,7 @@
     wireplumber.enable = true; # Manages Bluetooth audio profiles (essential)
   };
 
-  # Bluetooth (hardened + more robust)
-  hardware.bluetooth = {
-    enable = true;
-    powerOnBoot = true;
-    # Extra BlueZ settings → /etc/bluetooth/main.conf
-    settings = {
-      General = {
-        # Enable experimental features (often needed for modern earbuds/codecs)
-        Experimental = true;
-        # Make device discoverable/connectable quickly without long delays
-        FastConnectable = true;
-        # Improve compatibility with headsets and modern controllers
-        ControllerMode = "dual";
-        Enable = "Source,Sink,Media,Socket";
-        # Stronger privacy & encryption defaults
-        Privacy = "network";
-        JustWorksRepairing = "never";
-        MinEncryptionKeySize = 16;
-      };
-      Policy = {
-        # Ensure the adapter is automatically enabled on boot
-        AutoEnable = true;
-      };
-    };
-  };
-
+  # Bluetooth is configured centrally in hosts/nixos/default.nix
   services.blueman.enable = false;
 
   # Portals
@@ -63,7 +50,6 @@
 
   # KDE Connect (phone ↔ desktop)
   programs.kdeconnect.enable = false;
-
 
   # ── KDE Tools ─────────────────────────────────────────────────
   environment.systemPackages = with pkgs; [

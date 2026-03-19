@@ -7,22 +7,24 @@
 }:
 {
   imports = [
-    ./shell.nix # Zsh + Starship
-    ./git.nix # Git + Delta
-    ./tools.nix # bat, fzf, zoxide, direnv, btop, tmux
-    ./nvim.nix # Neovim (LazyVim)
-    ./dev.nix # IDEs, Languages
+    ./shell.nix
+    ./git.nix
+    ./tools.nix
+    ./nvim.nix
+    ./dev.nix
   ];
 
   home.username = "sanskar";
   home.homeDirectory = "/home/sanskar";
+  home.stateVersion = "25.11";
 
   # User-specific packages
   home.packages = with pkgs; [
     firefox
     kdePackages.spectacle
     kdePackages.polkit-kde-agent-1
-    kdePackages.plasma-nm ncdu
+    kdePackages.plasma-nm
+    ncdu
     nvtopPackages.full
     mesa-demos
     winboat
@@ -33,14 +35,8 @@
     freerdp
     unstable.zed-editor-fhs
     unstable.code-cursor
-    # Typst ecosystem
-    typst-live
-    typstwriter
-    tinymist
-    prettypst
-    typship
-    typesetter
-    typewriter
+
+    # Typst packages (managed via modules/typst.nix)
     typstPackages.cetz
     typstPackages.tbl
     typstPackages.tblr
@@ -114,15 +110,14 @@
     typstPackages.spreet
     typstPackages.truthfy
 
-    # Nerd Fonts (required for icons in starship, eza, lazyvim)
+    # Nerd Fonts
     nerd-fonts.jetbrains-mono
     nerd-fonts.fira-code
   ];
 
-  # Enable fontconfig for Home Manager fonts
   fonts.fontconfig.enable = true;
 
-  # Fastfetch config (Sekiro-themed)
+  # Fastfetch config
   xdg.configFile = {
     "fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
     "fastfetch/logo.txt".source = ./fastfetch/logo.txt;
@@ -140,18 +135,13 @@
     };
   };
 
-  # Force overwrite mimeapps.list (prevents HM clobbering errors)
   xdg.configFile."mimeapps.list".force = true;
 
-  # Let Home Manager manage itself
   programs.home-manager.enable = true;
 
-  # Auto-map LM Studio's internal database directly to the user's permanent ~/models directory
-  home.activation.linkLmStudioModels = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  # Map LM Studio's internal database to ~/models
+  home.activation.linkLmStudioModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     mkdir -p ~/.cache/lm-studio
     ln -sfn ~/models ~/.cache/lm-studio/models
   '';
-
-  # Home Manager state version
-  home.stateVersion = "25.11";
 }

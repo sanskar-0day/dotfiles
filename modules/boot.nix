@@ -2,94 +2,124 @@
 
 {
   # ── systemd-boot ───────────────────────────────────────────────
-  # Fast, simple, and reliable UEFI bootloader.
   boot.loader = {
     systemd-boot = {
       enable = true;
       editor = false;
       configurationLimit = 20;
-      # Use maximum resolution for the console to avoid mode switches
       consoleMode = "max";
     };
     efi = {
       canTouchEfiVariables = true;
       efiSysMountPoint = "/boot";
     };
-    # Set to 1s for a brief selection window.
     timeout = 1;
   };
 
   # ── Safe & Fast Boot ──────────────────────────────────────────
-  # Using systemd in initrd is faster as it parallelizes module loading.
   boot.initrd.systemd = {
     enable = true;
-    emergencyAccess = true; # Safety: Allow root shell on failure
-    # Note: tty option doesn't exist in NixOS systemd-initrd
+    emergencyAccess = false;
   };
 
   # ── Boot Verbosity ────────────────────────────────────────────
-  boot.consoleLogLevel = 0;
+  boot.consoleLogLevel = 3; # Show warnings and errors
   boot.initrd.verbose = false;
 
   boot.kernelParams = [
-    # Quiet boot (safe - reduces console spam)
     "quiet"
     "loglevel=3"
-    "rd.systemd.show_status=auto" # Only show status on failure
+    "rd.systemd.show_status=auto"
     "rd.udev.log_level=3"
     "udev.log_priority=3"
-    # Faster boot: skip unnecessary checks
-    "fastboot"                   # Skip some GPU/Disk checks
-    "noresume"                   # Skip looking for swap resume (unless you use hibernation)
-    "mitigations=off"            # (OPTIONAL/SPEED) Disable CPU security mitigations for ~5-10% speed boost
-    # Safety: Drop to shell if boot fails (kept per README)
+    "fastboot"
+    "noresume"
+    # Bluetooth: disable autosuspend (fixes laptop connection lag/drops)
+    "btusb.enable_autosuspend=n"
+    # Ensure amdgpu and nvidia don't fight over framebuffers
+    "video=efifb:off" 
     "boot.shell_on_fail"
   ];
 
+  # ── Sleep / Lid Behavior ──────────────────────────────────────
+  # On AC: never suspend (lid, idle, or power button)
+  # On battery: suspend on lid close, idle after 30min
   services.logind.settings.Login = {
     HandlePowerKey = "suspend";
+    HandlePowerKeyLongPress = "poweroff";
     HandleLidSwitch = "suspend";
+    HandleLidSwitchExternalPower = "ignore";
+    HandleLidSwitchDocked = "ignore";
+    HandleSuspendKey = "suspend";
+    HandleSuspendKeyLongPress = "ignore";
+    HandleHibernateKey = "ignore";
+    IdleAction = "suspend";
+    IdleActionSec = "30min";
+    LidSwitchIgnoreInhibited = true;
+    AllowSuspend = "yes";
+    AllowHibernation = "no";
+    AllowHybridSleep = "no";
+    AllowIdle = "yes";
   };
 
-  # ── Systemd Optimizations for Faster Boot ────────────────────
+  # AC power suspend blocker - masks suspend when plugged in
+  systemd.services.ac-suspend-block = {
+    description = "Block suspend while on AC power";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    path = [
+      pkgs.coreutils
+      pkgs.gnugrep
+    ];
+    script = ''
+      if [ -f /sys/class/power_supply/AC/uevent ] && \
+         grep -q "POWER_SUPPLY_ONLINE=1" /sys/class/power_supply/AC/uevent; then
+        systemctl mask systemd-suspend.service systemd-hibernate.service
+      fi
+    '';
+  };
+
+  # udev rule triggers on AC plug/unplug to update suspend policy
+  services.udev.extraRules = ''
+    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ACTION=="change", \
+      TAG+="systemd", ENV{SYSTEMD_WANTS}="ac-power-toggle.service"
+  '';
+
+  systemd.services.ac-power-toggle = {
+    description = "Toggle suspend on AC power change";
+    serviceConfig = {
+      Type = "oneshot";
+    };
+    path = [
+      pkgs.coreutils
+      pkgs.gnugrep
+    ];
+    script = ''
+      if grep -q "POWER_SUPPLY_ONLINE=1" /sys/class/power_supply/AC/uevent; then
+        systemctl mask systemd-suspend.service systemd-hibernate.service
+      else
+        systemctl unmask systemd-suspend.service systemd-hibernate.service
+      fi
+    '';
+  };
+
+  # ── Systemd Optimizations ────────────────────────────────────
   systemd.settings.Manager = {
-    # Faster service startup
     DefaultTimeoutStartSec = "5s";
     DefaultTimeoutStopSec = "5s";
-    # Allow more parallel service starts
     DefaultTasksMax = "infinity";
   };
 
-  # Optimize service startup times
   systemd.services = {
-    # Make Flatpak start faster (don't wait for updates)
-    flatpak-system-helper.serviceConfig = {
-      TimeoutStartSec = "5s";
-    };
-    
-    # Optimize NetworkManager to start faster
-    NetworkManager.serviceConfig = {
-      TimeoutStartSec = "5s";
-    };
-    
-    # Make Bluetooth start faster (non-blocking)
-    bluetooth.serviceConfig = {
-      TimeoutStartSec = "5s";
-    };
-    
-    # Optimize Cloudflare WARP to start faster
-    warp-svc.serviceConfig = {
-      TimeoutStartSec = "5s";
-    };
-    
-    # Make Pipewire start faster
-    pipewire.serviceConfig = {
-      TimeoutStartSec = "5s";
-    };
-    
-    # Optimize SDDM (display manager) startup
-    sddm.serviceConfig = {
-      TimeoutStartSec = "5s";
-    };
+    flatpak-system-helper.serviceConfig.TimeoutStartSec = "5s";
+    NetworkManager.serviceConfig.TimeoutStartSec = "5s";
+    bluetooth.serviceConfig.TimeoutStartSec = "5s";
+    warp-svc.serviceConfig.TimeoutStartSec = "5s";
+    pipewire.serviceConfig.TimeoutStartSec = "5s";
+    sddm.serviceConfig.TimeoutStartSec = "5s";
   };
 }

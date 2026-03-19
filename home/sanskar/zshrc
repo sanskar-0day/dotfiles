@@ -1,65 +1,158 @@
-# ── Zsh Environment Check ─────────────────────────────────
-# Prevent Bash from trying to parse this file
-if [ -z "$ZSH_VERSION" ]; then return; fi
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#   ZSH CONFIGURATION — Sanskar's Dotfiles
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Environment Variables
+# Prevent Bash/other shells from parsing this file
+[[ -z "$ZSH_VERSION" ]] && return
+
+# ── Environment ──────────────────────────────────────────────────────────────
+
 export NH_FLAKE="$HOME/dotfiles"
+export VISUAL="nvim"
+export EDITOR="nvim"
+export PAGER="less"
+export LESS="-R --mouse"
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
 
-# Edit command line in $EDITOR with Ctrl-E
+# Wayland / Toolkit defaults
+export MOZ_ENABLE_WAYLAND=1
+export QT_QPA_PLATFORM=wayland
+export GDK_BACKEND=wayland
+
+# Colored man pages via bat
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+export MANROFFOPT="-c"
+
+# ── Visuals & Colors ─────────────────────────────────────────────────────────
+
+autoload -Uz colors && colors
+
+# Generate LS_COLORS dynamically
+if command -v vivid &>/dev/null; then
+  export LS_COLORS="$(vivid generate dracula 2>/dev/null || vivid generate ayu 2>/dev/null)"
+fi
+
+# Completion UI styling
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*:descriptions' format '%F{green}── %d ──%f'
+zstyle ':completion:*:warnings' format '%F{red}No matches found%f'
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path ~/.cache/zsh/completion
+zstyle ':completion:*' separate-sections true
+zstyle ':completion:*' list-separator '--'
+
+# ── Keybindings ──────────────────────────────────────────────────────────────
+
+bindkey -e # Emacs mode (intuitive)
+
+# Utils
 autoload -z edit-command-line
 zle -N edit-command-line
 bindkey "^e" edit-command-line
-
-# Rich Completions
-zstyle ':completion:*' menu select
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
-zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
-zstyle ':completion:*:descriptions' format '%F{yellow}── %d ──%f'
-zstyle ':completion:*:warnings' format '%F{red}No matches%f'
-
-# Accept autosuggestion with Ctrl-Space
 bindkey '^ ' autosuggest-accept
 
-# Fuzzy Nix Package Search
+# Navigation
+bindkey '^[[A' history-search-backward
+bindkey '^[[B' history-search-forward
+bindkey "^[[H" beginning-of-line
+bindkey "^[[F" end-of-line
+bindkey '^[[1;5D' backward-word
+bindkey '^[[1;5C' forward-word
+
+# Editing
+bindkey "^[[3~" delete-char
+bindkey "^?" backward-delete-char
+
+# Magic Ctrl-Z (Toggle between FG and BG)
+fancy-ctrl-z () {
+  if [[ $#BUFFER -eq 0 ]]; then
+    BUFFER="fg"
+    zle accept-line
+  else
+    zle push-input
+  fi
+}
+zle -N fancy-ctrl-z
+bindkey '^Z' fancy-ctrl-z
+
+# ── History ──────────────────────────────────────────────────────────────────
+
+setopt SHARE_HISTORY
+setopt APPEND_HISTORY
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_REDUCE_BLANKS
+setopt HIST_IGNORE_SPACE
+setopt EXTENDED_HISTORY
+setopt INC_APPEND_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST
+
+# ── Nix Magic ────────────────────────────────────────────────────────────────
+
+# Use zsh for nix-shell environments
+if command -v any-nix-shell &>/dev/null; then
+  any-nix-shell zsh --info-right | source /dev/stdin
+fi
+
+# Auto-enter nix environments on 'cd'
+_nix_shell_detect() {
+  if [[ -f "shell.nix" && "$IN_NIX_SHELL" != "1" ]]; then
+    echo "%F{blue}󱄅 %fProject environment detected (shell.nix). Entering..."
+    exec nix-shell
+  elif [[ -f "flake.nix" && "$IN_NIX_SHELL" != "1" ]]; then
+     echo "%F{blue}󱄅 %fFlake detected. Entering dev shell..."
+     exec nix develop
+  fi
+}
+autoload -U add-zsh-hook
+add-zsh-hook chpwd _nix_shell_detect
+
+# ── Helper Functions ─────────────────────────────────────────────────────────
+
+# Search packages with fuzzy preview
 ns() {
   nix search nixpkgs#"$1" --json 2>/dev/null \
     | jq -r 'to_entries[] | "\(.key)\t\(.value.description)"' \
     | column -t -s $'\t' \
-    | fzf --ansi --preview 'echo {}' --header "Stable Packages"
+    | fzf --ansi --header "Stable Packages"
 }
 
-nu() {
-  nix search github:NixOS/nixpkgs/nixos-unstable#"$1" --json 2>/dev/null \
-    | jq -r 'to_entries[] | "\(.key)\t\(.value.description)"' \
-    | column -t -s $'\t' \
-    | fzf --ansi --preview 'echo {}' --header "Unstable Packages"
+# Quick project setup
+mkcd() { mkdir -p "$1" && cd "$1"; }
+
+# Extract everything
+extract() {
+  if [[ -f "$1" ]]; then
+    case "$1" in
+      *.tar.bz2) tar xjf "$1" ;;
+      *.tar.gz)  tar xzf "$1" ;;
+      *.tar.xz)  tar xJf "$1" ;;
+      *.tar)     tar xf "$1"  ;;
+      *.zip)     unzip "$1"   ;;
+      *.7z)      7z x "$1"    ;;
+      *.rar)     unrar x "$1" ;;
+      *)         echo "'$1' cannot be extracted via extract()" ;;
+    esac
+  else
+    echo "'$1' is not a valid file"
+  fi
 }
 
-ni() { nix shell nixpkgs#"$1"; }
+# ── Integrations ─────────────────────────────────────────────────────────────
 
-# Quick Edit Dotfiles
-dots() { cd ~/dotfiles && $EDITOR .; }
+# Zoxide (Smart CD)
+if command -v zoxide &>/dev/null; then
+  eval "$(zoxide init zsh)"
+  alias cd='z'
+  alias cdi='zi'
+fi
 
-# WiFi driver toggle (external RTL8822BU ↔ internal MediaTek)
-wifi-mt() {
-  echo "Switching to MediaTek (mt7921e)..." >&2
-  sudo rfkill unblock wifi
-  sudo modprobe -r 88x2bu 2>/dev/null || true
-  sudo modprobe mt7921_common 2>/dev/null || true
-  sudo modprobe mt7921e 2>/dev/null || true
-  sudo systemctl restart NetworkManager
-}
-
-wifi-fix() {
-  echo "Switching back to RTL8822BU (88x2bu)..." >&2
-  sudo rfkill unblock wifi
-  sudo modprobe -r mt7921e 2>/dev/null || true
-  sudo modprobe -r mt7921_common 2>/dev/null || true
-  sudo modprobe 88x2bu 2>/dev/null || true
-  sudo systemctl restart NetworkManager
-}
-
-# Fastfetch on launch
-if [ -z "$TMUX" ] && [ "x$-" = "xi" ] && command -v fastfetch >/dev/null 2>&1; then
-  fastfetch --config "$HOME/.config/fastfetch/config.jsonc"
+# Welcome Message (Fastfetch)
+if [[ -z "$TMUX" && "$-" == *i* ]]; then
+  if command -v fastfetch >/dev/null; then
+    fastfetch --config "$HOME/.config/fastfetch/config.jsonc"
+  fi
 fi

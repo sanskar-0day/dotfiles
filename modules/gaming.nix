@@ -15,8 +15,13 @@
 
     # Performance
     mangohud            # FPS overlay (Vulkan/OpenGL)
-    gamemode            # Feral's CPU/GPU optimizer — auto-enabled by Lutris
-
+    gamemode            # Feral's CPU/GPU optimizer
+    libstrangle         # FPS capping tool (prevents stutters)
+    
+    # Steam helpers
+    protontricks        # Winetricks for Proton games (essential for many games)
+    steam-run           # Run anything inside the Steam environment (FHS)
+    
     # Vulkan support (required for DXVK — translates DirectX 9/10/11 → Vulkan)
     vulkan-tools
     vulkan-loader
@@ -37,6 +42,12 @@
       gpu = {
         apply_gpu_optimisations = "accept-responsibility";
         gpu_device = 0;
+        nv_powermode_offset = 1;    # Set NVIDIA to "Prefer Maximum Performance"
+      };
+      # Custom scripts when starting/stopping gamemode
+      custom = {
+        start = "notify-send 'GameMode' 'Started - GPU optimized'";
+        stop = "notify-send 'GameMode' 'Ended - Profiles reset'";
       };
     };
   };

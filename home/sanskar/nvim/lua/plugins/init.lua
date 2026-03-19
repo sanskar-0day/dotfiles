@@ -24,13 +24,17 @@ return {
   -- Language: Nix support
   { "LnL7/vim-nix", ft = "nix" },
 
+  -- ═══════════════════════════════════════════════════════════
+  --   AI TOOLS
+  -- ═══════════════════════════════════════════════════════════
+
   -- AI Tool #1: Avante.nvim (Cursor-like IDE experience)
   {
     "yetone/avante.nvim",
     event = "VeryLazy",
     lazy = false,
     version = false,
-    build = "make", -- Requires: gnumake, cargo, pkg-config (added in nvim.nix)
+    build = "make",
     opts = {
       provider = "claude",
       auto_suggestions_provider = "claude",
@@ -136,17 +140,14 @@ return {
       "MunifTanjim/nui.nvim",
     },
     event = "VeryLazy",
-    opts = {
-      -- Use default options, or customize here
-      -- Example: set default model or adapter
-    },
+    opts = {},
   },
 
-  -- ==========================================
-  -- Modern IDE Enhancements
-  -- ==========================================
+  -- ═══════════════════════════════════════════════════════════
+  --   MODERN IDE ENHANCEMENTS
+  -- ═══════════════════════════════════════════════════════════
 
-  -- 1. Noice.nvim: Highly experimental but beautiful UI for messages, cmdline, and popupmenu.
+  -- 1. Noice.nvim: Beautiful UI for messages, cmdline, and popupmenu
   {
     "folke/noice.nvim",
     event = "VeryLazy",
@@ -175,7 +176,7 @@ return {
   -- 2. Trouble.nvim: Better diagnostics list
   {
     "folke/trouble.nvim",
-    opts = {}, -- use default options
+    opts = {},
     cmd = "Trouble",
     keys = {
       { "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics (Trouble)" },
@@ -226,8 +227,187 @@ return {
       { "<leader>sg", "<cmd>FzfLua live_grep<cr>", desc = "Live Grep (Fzf)" },
       { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "Find Buffers (Fzf)" },
       { "<leader>sh", "<cmd>FzfLua help_tags<cr>", desc = "Help Tags (Fzf)" },
+      { "<leader>fr", "<cmd>FzfLua oldfiles<cr>", desc = "Recent Files" },
+      { "<leader>fw", "<cmd>FzfLua grep_cword<cr>", desc = "Grep Word" },
+      { "<leader>fg", "<cmd>FzfLua git_files<cr>", desc = "Git Files" },
+      { "<leader>fc", "<cmd>FzfLua git_commits<cr>", desc = "Git Commits" },
+      { "<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "Buffers" },
+      { "<leader>fh", "<cmd>FzfLua help_tags<cr>", desc = "Help" },
+      { "<leader>fs", "<cmd>FzfLua lsp_document_symbols<cr>", desc = "Document Symbols" },
+      { "<leader>fd", "<cmd>FzfLua diagnostics_document<cr>", desc = "Document Diagnostics" },
+      { "<leader>fD", "<cmd>FzfLua diagnostics_workspace<cr>", desc = "Workspace Diagnostics" },
     },
     opts = {},
   },
-}
 
+  -- ═══════════════════════════════════════════════════════════
+  --   ADDITIONAL USEFUL PLUGINS
+  -- ═══════════════════════════════════════════════════════════
+
+  -- Auto-pairs for brackets, quotes, etc.
+  {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    config = true,
+  },
+
+  -- Surround actions (cs"', ds", ysiw')
+  {
+    "kylechui/nvim-surround",
+    event = "VeryLazy",
+    config = true,
+  },
+
+  -- Git signs in the gutter
+  {
+    "lewis6991/gitsigns.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    config = true,
+    keys = {
+      { "]h", function() require("gitsigns").nav_hunk("next") end, desc = "Next Hunk" },
+      { "[h", function() require("gitsigns").nav_hunk("prev") end, desc = "Prev Hunk" },
+      { "<leader>gh", function() require("gitsigns").preview_hunk() end, desc = "Preview Hunk" },
+      { "<leader>gb", function() require("gitsigns").blame_line() end, desc = "Blame Line" },
+      { "<leader>gr", function() require("gitsigns").reset_hunk() end, desc = "Reset Hunk" },
+      { "<leader>gR", function() require("gitsigns").reset_buffer() end, desc = "Reset Buffer" },
+    },
+  },
+
+  -- Better notifications
+  {
+    "rcarriga/nvim-notify",
+    opts = {
+      timeout = 3000,
+      max_height = function() return math.floor(vim.o.lines * 0.75) end,
+      max_width = function() return math.floor(vim.o.columns * 0.75) end,
+      render = "default",
+      stages = "fade_in_slide_out",
+    },
+  },
+
+  -- Better buffer remove (delete without messing up layout)
+  {
+    "echasnovski/mini.bufremove",
+    keys = {
+      { "<leader>bd", function() require("mini.bufremove").delete(0, false) end, desc = "Delete Buffer" },
+      { "<leader>bD", function() require("mini.bufremove").delete(0, true) end, desc = "Delete Buffer (Force)" },
+    },
+  },
+
+  -- Indent guides
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    event = { "BufReadPost", "BufNewFile" },
+    main = "ibl",
+    opts = {
+      indent = { char = "│" },
+      scope = { enabled = true },
+    },
+  },
+
+  -- Which-key: Shows pending keybinds
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    opts = {},
+    keys = {
+      { "<leader>?", function() require("which-key").show({ global = false }) end, desc = "Buffer Local Keymaps (which-key)" },
+    },
+  },
+
+  -- Better escape (jk/jj to escape)
+  {
+    "max397574/better-escape.nvim",
+    event = "InsertEnter",
+    opts = {
+      mapping = { "jk", "jj" },
+      timeout = 200,
+    },
+  },
+
+  -- File explorer (nvim-tree)
+  {
+    "nvim-tree/nvim-tree.lua",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    keys = {
+      { "<leader>e", "<cmd>NvimTreeToggle<cr>", desc = "Toggle File Explorer" },
+      { "<leader>E", "<cmd>NvimTreeFindFile<cr>", desc = "Find File in Explorer" },
+    },
+    opts = {
+      filters = {
+        dotfiles = false,
+        custom = { "^.git$" },
+      },
+      view = {
+        width = 30,
+        side = "left",
+      },
+      renderer = {
+        indent_markers = { enable = true },
+        icons = {
+          show = {
+            file = true,
+            folder = true,
+            folder_arrow = true,
+            git = true,
+          },
+        },
+      },
+      git = {
+        enable = true,
+        ignore = false,
+      },
+    },
+  },
+
+  -- Todo-comments (already have this, adding more keywords)
+  {
+    "folke/todo-comments.nvim",
+    opts = {
+      keywords = {
+        FIX = { icon = " ", color = "error", alt = { "FIXME", "BUG", "FIXIT", "ISSUE" } },
+        TODO = { icon = " ", color = "info" },
+        HACK = { icon = " ", color = "warning" },
+        WARN = { icon = " ", color = "warning", alt = { "WARNING", "XXX" } },
+        PERF = { icon = " ", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },
+        NOTE = { icon = " ", color = "hint", alt = { "INFO" } },
+        TEST = { icon = " ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },
+      },
+    },
+  },
+
+  -- Better text objects
+  {
+    "echasnovski/mini.ai",
+    event = "VeryLazy",
+    opts = {},
+  },
+
+  -- Tmux navigator (seamless tmux <-> nvim pane navigation)
+  {
+    "christoomey/vim-tmux-navigator",
+    event = "VeryLazy",
+  },
+
+  -- Highlight word under cursor
+  {
+    "RRethy/vim-illuminate",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      delay = 200,
+      providers = { "lsp", "treesitter" },
+    },
+  },
+
+  -- Session management
+  {
+    "folke/persistence.nvim",
+    event = "BufReadPre",
+    opts = {},
+    keys = {
+      { "<leader>qs", function() require("persistence").load() end, desc = "Restore Session" },
+      { "<leader>ql", function() require("persistence").load({ last = true }) end, desc = "Restore Last Session" },
+      { "<leader>qd", function() require("persistence").stop() end, desc = "Don't Save Current Session" },
+    },
+  },
+}

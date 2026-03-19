@@ -1,4 +1,9 @@
-{ config, pkgs, unstable, ... }:
+{
+  config,
+  pkgs,
+  unstable,
+  ...
+}:
 {
   imports = [
     ./hardware.nix
@@ -8,52 +13,115 @@
     ../../modules/virtualization.nix
     ../../modules/gaming.nix
     ../../modules/ai.nix
+    ../../modules/typst.nix
   ];
+
   nixpkgs.config.allowUnfree = true;
 
   # ── Boot & Kernel ──────────────────────────────────────────────
-  # Using the specific kernel version that worked previously
   boot.kernelPackages = pkgs.linuxPackages_6_12;
-  boot.kernelModules = [ "kvm" "kvm_amd" "iptables_nat" "ip_tables" ];
+  boot.kernelModules = [
+    "kvm"
+    "kvm_amd"
+    "iptables_nat"
+    "ip_tables"
+  ];
 
-  # Blacklist conflicting drivers
   boot.blacklistedKernelModules = [
     "nouveau"
-    "rtw88_8822bu" "rtw88_8822b" "rtw_8822bu" # Default kernel driver for 8822BU
+    "rtw88_8822bu"
+    "rtw88_8822b"
+    "rtw_8822bu"
   ];
 
   boot.extraModprobeConfig = ''
     options ieee80211 powersave=0
     options cfg80211 ieee80211_regdom=IN
-    # Push TP-Link T3U Plus (rtl88x2bu) to absolute limits
-    options 88x2bu rtw_drv_log_level=1 rtw_led_ctrl=1 rtw_vht_enable=1 rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1
+    # TP-Link T3U Plus (rtl88x2bu) - Stable high-perf settings
+    options 88x2bu rtw_drv_log_level=0 rtw_led_ctrl=1 rtw_vht_enable=1 rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1
   '';
 
-  hardware.enableRedistributableFirmware = true;
-
-  # WiFi external driver
+  hardware.firmware = [ pkgs.linux-firmware ];
   boot.extraModulePackages = [ config.boot.kernelPackages.rtl88x2bu ];
 
   # ── Networking ─────────────────────────────────────────────────
   networking.hostName = "nixos";
-  networking.networkmanager.enable = true;
-  networking.networkmanager.wifi.backend = "iwd";
-  networking.networkmanager.wifi.powersave = false;
+  networking.networkmanager = {
+    enable = true;
+    wifi.backend = "iwd";
+    wifi.powersave = false;
+    dns = "systemd-resolved";
+  };
+  
+  networking.wireless.iwd = {
+    enable = true;
+    settings = {
+      General = {
+        EnableNetworkConfiguration = true;
+        AddressRandomization = "network"; # Better privacy, less router trouble than "always"
+      };
+      Settings = {
+        AutoConnect = true;
+      };
+    };
+  };
+
+  # TCP Stack Optimizations (Gaming & Latency)
+  boot.kernel.sysctl = {
+    # Increase TCP buffer sizes for higher speeds
+    "net.core.rmem_max" = 16777216;
+    "net.core.wmem_max" = 16777216;
+    "net.ipv4.tcp_rmem" = "4096 87380 16777216";
+    "net.ipv4.tcp_wmem" = "4096 65536 16777216";
+    
+    # TCP fast open
+    "net.ipv4.tcp_fastopen" = 3;
+    
+    # BBR Congestion Control (Google's algo for better throughput on lossy networks)
+    "net.core.default_qdisc" = "fq";
+    "net.ipv4.tcp_congestion_control" = "bbr";
+  };
+  
+  # systemd-resolved for better DNS handling (required for WARP)
+  services.resolved = {
+    enable = true;
+    fallbackDns = [ "8.8.4.4" "9.9.9.9" ];
+    domains = [ "~." ];
+  };
+
+  # Global DNS nameservers
+  networking.nameservers = [ "1.1.1.1" "8.8.8.8" "1.0.0.1" ];
+
   systemd.services.NetworkManager-wait-online.enable = false;
 
-  networking.wireless.iwd.enable = true;
-  networking.wireless.iwd.settings = {
-    General = {
-      EnableNetworkConfiguration = true;
-    };
-    Settings = {
-      AutoConnect = true;
-    };
+  # ── Firewall ───────────────────────────────────────────────────
+  networking.firewall = {
+    enable = true;
+    # Allow local traffic and specific services
+    allowPing = true;
+    
+    # KDE Connect
+    allowedTCPPortRanges = [ { from = 1714; to = 1764; } ];
+    allowedUDPPortRanges = [ { from = 1714; to = 1764; } ];
+    
+    # WARP / VPN Compatibility
+    checkReversePath = "loose";
+    logReversePathDrops = false;
   };
 
   # ── Locale / Time ─────────────────────────────────────────────
   time.timeZone = "Asia/Kolkata";
   i18n.defaultLocale = "en_US.UTF-8";
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "en_IN";
+    LC_MEASUREMENT = "en_IN";
+    LC_MONETARY = "en_IN";
+    LC_NAME = "en_IN";
+    LC_NUMERIC = "en_IN";
+    LC_PAPER = "en_IN";
+    LC_TELEPHONE = "en_IN";
+    LC_TIME = "en_IN";
+  };
 
   # ── Services ───────────────────────────────────────────────────
   services.openssh.enable = false;
@@ -65,13 +133,33 @@
   services.packagekit.enable = false;
   services.fstrim.enable = true;
 
-  # Bluetooth support
-  hardware.bluetooth.enable = true;
-  hardware.bluetooth.powerOnBoot = true;
+  # Bluetooth (centralized)
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+    settings = {
+      General = {
+        Experimental = true;
+        FastConnectable = true;
+        ControllerMode = "dual";
+        Enable = "Source,Sink,Media,Socket";
+        # Consumer earbuds usually need lower security settings to connect reliably
+        Privacy = "off";
+        JustWorksRepairing = "always";
+        MinEncryptionKeySize = 7; # Most earbuds use 7 or 8
+        ExperimentalBatteryReporting = true;
+      };
+      # Reconnect automatically
+      Policy = {
+        AutoEnable = true;
+        ReconnectAttempts = 15;
+        ReconnectInterval = 1;
+      };
+    };
+  };
   services.blueman.enable = false;
 
-  # Laptop Power Management
-  services.auto-cpufreq.enable = false;
+  # Power Management
   services.power-profiles-daemon.enable = true;
   services.udev.extraRules = ''
     SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}="power-profile-ac.service"
@@ -94,28 +182,24 @@
     };
   };
 
-  # Touchpad support
+  # Touchpad
   services.libinput.enable = true;
   services.libinput.touchpad.tapping = true;
   services.libinput.touchpad.naturalScrolling = true;
 
-  # Kanata – always-active keyboard remapper
+  # Kanata – keyboard remapper
   services.kanata = {
     enable = true;
     keyboards.default = {
       config = builtins.readFile ./kanata.kbd;
       extraDefCfg = "process-unmapped-keys yes";
-      devices = [];   # empty = capture all keyboards
+      devices = [ ];
     };
   };
 
-  # Steam is configured in modules/gaming.nix
-
-  # Zsh must be enabled at system level for user shells to work
-  # Home Manager manages the config, NixOS provides the shell
   programs.zsh.enable = true;
 
-  # Nix Helper (Clean CLI for rebuilds)
+  # Nix Helper
   programs.nh = {
     enable = true;
     clean.enable = true;
@@ -123,78 +207,153 @@
     flake = "/home/sanskar/dotfiles";
   };
 
-  # Nix-LD (Run un-patched binaries, essential for AI tools/LSPs)
-  programs.nix-ld.enable = false;
-  services.envfs.enable = false;
+  programs.nix-ld.enable = true;
+  services.envfs.enable = true;
+
+  # ── Security ───────────────────────────────────────────────────
+  security.sudo.enable = false;
+  security.doas = {
+    enable = true;
+    extraRules = [
+      {
+        users = [ "sanskar" ];
+        keepEnv = true;
+        persist = true;
+      }
+    ];
+  };
+  # Alias sudo → doas for muscle memory
+  environment.shellAliases.sudo = "doas";
+
+  security.pam.services.login.failDelay = {
+    enable = true;
+    delay = 4000000; # 4 seconds
+  };
 
   # ── User ───────────────────────────────────────────────────────
   users.users.sanskar = {
     isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [
-      "wheel" "networkmanager" "docker" "kvm" "libvirtd"
-      "video" "audio" "input" "storage" "optical"
-      "dialout" "lp" "bluetooth" "render"
+      "wheel"
+      "networkmanager"
+      "docker"
+      "kvm"
+      "libvirtd"
+      "video"
+      "audio"
+      "input"
+      "storage"
+      "optical"
+      "dialout"
+      "lp"
+      "bluetooth"
+      "render"
     ];
   };
 
   # ── System Packages ────────────────────────────────────────────
   environment.systemPackages = with pkgs; [
     # Core tools
-    vim wget git neovim gcc gnumake
-    pciutils usbutils
-    iw ethtool rfkill
+    vim
+    wget
+    git
+    neovim
+    gcc
+    gnumake
+    pciutils
+    usbutils
+    iw
+    ethtool
+    util-linux
 
     # Services
-    kanata cloudflare-warp
+    kanata
+    cloudflare-warp
     home-manager
-    typst
 
-    # AI Coding Tools (global from unstable)
+    # AI Coding Tools (from unstable)
     unstable.codex
     unstable.gemini-cli
     unstable.qwen-code
     unstable.opencode
   ];
 
-  # Fonts for Typst/PDF output
+  # ── Fonts ──────────────────────────────────────────────────────
+  # Commonly used fonts for Typst, development, and general use
   fonts.packages = with pkgs; [
+    # Monospace / Code fonts
+    jetbrains-mono
+    fira-code
+    fira-mono
+    hack-font
+    victor-mono
+    iosevka
+    commit-mono
+    cascadia-code
+
+    # Serif fonts (Typst defaults)
     libertinus
+    stix-two
+
+    # Sans-serif fonts
+    inter
+    noto-fonts
+    noto-fonts-cjk-sans
+    noto-fonts-cjk-serif
+    noto-fonts-color-emoji
+    liberation_ttf
+    dejavu_fonts
+    ubuntu-classic
+    cantarell-fonts
+
+    # Typst / PDF rendering
+    corefonts
   ];
+
+  # ── XDG ────────────────────────────────────────────────────────
+  environment.sessionVariables = {
+    XDG_CACHE_HOME = "$HOME/.cache";
+    XDG_CONFIG_HOME = "$HOME/.config";
+    XDG_DATA_HOME = "$HOME/.local/share";
+    XDG_STATE_HOME = "$HOME/.local/state";
+  };
 
   # ── Swap & Performance ────────────────────────────────────────
   zramSwap.enable = true;
 
   # ── Nix Settings ──────────────────────────────────────────────
   nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
 
-    # Build — uses ~half of 16 cores / 22GB RAM
-    max-jobs = 4;
-    cores = 4;
+    # Build
+    max-jobs = "auto";
+    cores = 0;
 
     # Downloads
-    max-substitution-jobs = 8;
-    http-connections = 8;
+    max-substitution-jobs = 32;
+    http-connections = 64;
     auto-optimise-store = true;
+    
+    trusted-users = [ "root" "sanskar" ];
 
-    # Mirrors ordered by reliability and then speed
     substituters = [
-      "https://cache.nixos.org"                                    # 1.1s ✓ (Most reliable)
-      "https://mirrors.ustc.edu.cn/nix-channels/store"            # 1.9s ✓
-      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"   # 2.1s ✓
-      "https://mirror.sjtu.edu.cn/nix-channels/store"             # 3.8s ✓
+      "https://cache.nixos.org"
+      "https://nix-community.cachix.org"
+      "https://mirrors.ustc.edu.cn/nix-channels/store"
     ];
     trusted-public-keys = [
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
     ];
 
-    # Auto-skip stalled downloads
-    stalled-download-timeout = 5;
+    stalled-download-timeout = 10;
     connect-timeout = 5;
   };
 
-  # ── Garbage Collection (Handled by nh) ────────────────────────
   nix.gc = {
     automatic = false;
   };

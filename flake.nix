@@ -13,6 +13,12 @@
       url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Nix-index database for faster package searching
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -21,6 +27,7 @@
       nixpkgs,
       nixpkgs-unstable,
       home-manager,
+      nix-index-database,
       ...
     }@inputs:
     let
@@ -53,13 +60,29 @@
             # Pass pkgs-unstable to home-manager
             home-manager.extraSpecialArgs = { inherit inputs unstable; };
           }
+
+          # 3. Nix-index database for faster package searching
+          nix-index-database.nixosModules.nix-index
+          {
+            programs.nix-index-database.comma.enable = true;
+          }
         ];
       };
 
+      # Standalone Home Manager (for non-NixOS or quick user rebuilds)
       homeConfigurations.sanskar = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
         extraSpecialArgs = { inherit inputs unstable; };
-        modules = [ ./home/sanskar ];
+        modules = [
+          ./home/sanskar
+          nix-index-database.homeModules.nix-index
+        ];
+      };
+
+      # ── Packages ────────────────────────────────────────────────
+      # `nix build .#docs` — generates a Typst PDF from live config
+      packages.${system}.docs = import ./docs/builder.nix {
+        inherit (pkgs) lib runCommand typst;
       };
     };
 }
