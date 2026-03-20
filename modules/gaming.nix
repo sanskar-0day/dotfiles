@@ -35,7 +35,7 @@
     enable = true;
     settings = {
       general = {
-        renice = 10;                # Prioritize game process
+        renice = 15;                # Higher prioritize for game process
         softrealtime = "auto";
         inhibit_screensaver = 1;
       };
@@ -46,10 +46,18 @@
       };
       # Custom scripts when starting/stopping gamemode
       custom = {
-        start = "notify-send 'GameMode' 'Started - GPU optimized'";
-        stop = "notify-send 'GameMode' 'Ended - Profiles reset'";
+        start = "notify-send 'GameMode' 'Turbo Active - GPU Max Performance'";
+        stop = "notify-send 'GameMode' 'Turbo Disabled - Resetting'";
       };
     };
+  };
+
+  # ── Ananicy (Auto-Nice) ───────────────────────────────────────
+  # Automatically prioritizes games and heavy apps in the background
+  services.ananicy = {
+    enable = true;
+    package = pkgs.ananicy-cpp;
+    rulesProvider = pkgs.ananicy-rules-cachyos;
   };
 
   # ── Steam (already enabled, adding Proton extras) ─────────────
@@ -58,6 +66,7 @@
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
     gamescopeSession.enable = true;   # Gamescope compositor for better perf
+    extraCompatPackages = [ pkgs.proton-ge-bin ];
   };
 
   # ── Gamescope (micro-compositor for games) ────────────────────
@@ -70,9 +79,12 @@
   # FitGirl's Oodle decompressor needs huge stack + memory mappings
   boot.kernel.sysctl = {
     "vm.max_map_count" = 2147483642;  # Wine needs lots of memory mappings
+    "fs.file-max" = 524288;           # Prevent "too many open files" crashes in huge games
   };
   security.pam.loginLimits = [
     { domain = "*"; type = "hard"; item = "stack"; value = "unlimited"; }
     { domain = "*"; type = "soft"; item = "stack"; value = "unlimited"; }
+    { domain = "*"; type = "hard"; item = "nofile"; value = "524288"; }
+    { domain = "*"; type = "soft"; item = "nofile"; value = "524288"; }
   ];
 }

@@ -21,6 +21,7 @@
   # User-specific packages
   home.packages = with pkgs; [
     firefox
+    unstable.lmstudio
     kdePackages.spectacle
     kdePackages.polkit-kde-agent-1
     kdePackages.plasma-nm

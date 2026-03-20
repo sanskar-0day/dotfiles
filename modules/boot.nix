@@ -19,7 +19,7 @@
   # ── Safe & Fast Boot ──────────────────────────────────────────
   boot.initrd.systemd = {
     enable = true;
-    emergencyAccess = false;
+    emergencyAccess = true;
   };
 
   # ── Boot Verbosity ────────────────────────────────────────────
@@ -42,8 +42,7 @@
   ];
 
   # ── Sleep / Lid Behavior ──────────────────────────────────────
-  # On AC: never suspend (lid, idle, or power button)
-  # On battery: suspend on lid close, idle after 30min
+  # Using standard logind settings
   services.logind.settings.Login = {
     HandlePowerKey = "suspend";
     HandlePowerKeyLongPress = "poweroff";
@@ -60,51 +59,6 @@
     AllowHibernation = "no";
     AllowHybridSleep = "no";
     AllowIdle = "yes";
-  };
-
-  # AC power suspend blocker - masks suspend when plugged in
-  systemd.services.ac-suspend-block = {
-    description = "Block suspend while on AC power";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    path = [
-      pkgs.coreutils
-      pkgs.gnugrep
-    ];
-    script = ''
-      if [ -f /sys/class/power_supply/AC/uevent ] && \
-         grep -q "POWER_SUPPLY_ONLINE=1" /sys/class/power_supply/AC/uevent; then
-        systemctl mask systemd-suspend.service systemd-hibernate.service
-      fi
-    '';
-  };
-
-  # udev rule triggers on AC plug/unplug to update suspend policy
-  services.udev.extraRules = ''
-    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ACTION=="change", \
-      TAG+="systemd", ENV{SYSTEMD_WANTS}="ac-power-toggle.service"
-  '';
-
-  systemd.services.ac-power-toggle = {
-    description = "Toggle suspend on AC power change";
-    serviceConfig = {
-      Type = "oneshot";
-    };
-    path = [
-      pkgs.coreutils
-      pkgs.gnugrep
-    ];
-    script = ''
-      if grep -q "POWER_SUPPLY_ONLINE=1" /sys/class/power_supply/AC/uevent; then
-        systemctl mask systemd-suspend.service systemd-hibernate.service
-      else
-        systemctl unmask systemd-suspend.service systemd-hibernate.service
-      fi
-    '';
   };
 
   # ── Systemd Optimizations ────────────────────────────────────

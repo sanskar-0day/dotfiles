@@ -24,6 +24,13 @@
     enableZshIntegration = true;
   };
 
+  # ── direnv ───────────────────────────────────────────────────
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+    enableZshIntegration = true;
+  };
+
   # ── btop (system monitor) ─────────────────────────────────────
   programs.btop = {
     enable = true;
@@ -181,6 +188,7 @@
 
     # Nix tools
     any-nix-shell # use zsh for nix-shell
+    direnv # per-directory environment variables
     nvd # NixOS version diff (compare generations)
     nh # yet another nix cli helper
     nix-output-monitor # nom - pretty output for nix builds

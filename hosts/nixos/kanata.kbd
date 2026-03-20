@@ -1,16 +1,6 @@
 ;; =============================================================================
 ;; Kanata Configuration – Ultimate Home-Row-Centric Layout
 ;; =============================================================================
-;; Modifiers:
-;;   Home Row Mods (A S D F / J K L ;)
-;;   CapsLock : tap = Esc, hold = Nav layer
-;;   RightAlt : tap = Right Alt, hold = NumSym layer
-;;   Tab      : tap = Tab, hold = System layer (mouse + media)
-;;
-;; This configuration uses Home Row Modifiers:
-;;   A -> Super (Cmd/Meta) | S -> Alt | D -> Ctrl | F -> Shift
-;;   J -> Shift | K -> Ctrl | L -> Alt | ; -> Super (Cmd/Meta)
-;; =============================================================================
 
 (defsrc
   caps  a  s  d  f  g  h  j  k  l  scln  apos
@@ -18,6 +8,7 @@
   lsft  z  x  c  v  b  n  m  comm  .  /  rsft
   lctl  lmet  lalt  spc  ralt  rmet  rctl
   ret   bspc
+  f1
 )
 
 ;; -----------------------------------------------------------------------------
@@ -31,14 +22,14 @@
 
   ;; Home Row Modifiers (Left)
   a_mod (tap-hold 200 200 a lmet)
-  s_mod (tap-hold 200 200 s lalt)
+  s_mod (tap-hold 200 200 s (layer-while-held numsym))
   d_mod (tap-hold 200 200 d lctl)
   f_mod (tap-hold 200 200 f lsft)
 
   ;; Home Row Modifiers (Right)
   j_mod (tap-hold 200 200 j rsft)
   k_mod (tap-hold 200 200 k rctl)
-  l_mod (tap-hold 200 200 l ralt)
+  l_mod (tap-hold 200 200 l (layer-while-held numsym))
   sem_mod (tap-hold 200 200 scln rmet)
 
   ;; Media keys
@@ -50,7 +41,7 @@
   next    next
   media   media
 
-  ;; Mouse actions (faster 30px steps, 3‑line scroll)
+  ;; Mouse actions
   mleft   (movemouse-left 30 30)
   mright  (movemouse-right 30 30)
   mup     (movemouse-up 30 30)
@@ -87,6 +78,10 @@
   scrlk   slck
   pause   pause
   menu    menu
+
+  ;; Layer control - F1 toggles between base and gaming
+  tog-game (layer-switch gaming)
+  tog-base (layer-switch base)
 )
 
 ;; -----------------------------------------------------------------------------
@@ -98,14 +93,16 @@
   lsft    z       x       c       v       b   n   m       comm    .       /         rsft
   lctl    lmet    lalt    spc     @meta   rmet  rctl
   ret     bspc
+  @tog-game
 )
 
 (deflayer nav
   _   f7   f8   f9   f10  f11  f12  left down up   right _
   _   f1   f2   f3   f4   f5   f6   home pgup pgdn end   _    _
-  _   @ctl-z @ctl-x @ctl-c @ctl-v @ctl-y del  ins  _    _    _    _
+  _   bspc del  @ctl-c @ctl-v @ctl-y del  ins  _    _    _    _
   _   _    _    _    _    _    _
   _   _
+  _
 )
 
 (deflayer numsym
@@ -114,6 +111,7 @@
   _   @_   @us  @eq  @pl  @lb  @rb  @lc  @rc  @bs  @pi   _
   _   _    _    _    _    _    _
   _   _
+  _
 )
 
 (deflayer system
@@ -122,4 +120,17 @@
   _   @voldown @volup @mute @play @prev @next @media _    _    _    _
   _   _    _    _    _    _    _
   _   _
+  _
+)
+
+;; -----------------------------------------------------------------------------
+;; GAMING LAYER – no home row mods, raw key access
+;; -----------------------------------------------------------------------------
+(deflayer gaming
+  caps a  s  d  f  g  h  j  k  l  scln  apos
+  tab  q  w  e  r  t  y  u  i  o  p  lbrc  rbrc
+  lsft z  x  c  v  b  n  m  comm  .  /  rsft
+  lctl lmet lalt spc ralt rmet rctl
+  ret bspc
+  @tog-base
 )

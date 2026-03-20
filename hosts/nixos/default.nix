@@ -29,9 +29,8 @@
 
   boot.blacklistedKernelModules = [
     "nouveau"
-    "rtw88_8822bu"
-    "rtw88_8822b"
-    "rtw_8822bu"
+    "mt7921e"
+    "mt7921_common"
   ];
 
   boot.extraModprobeConfig = ''
@@ -41,6 +40,7 @@
     options 88x2bu rtw_drv_log_level=0 rtw_led_ctrl=1 rtw_vht_enable=1 rtw_power_mgnt=0 rtw_enusbss=0 rtw_switch_usb_mode=1
   '';
 
+  hardware.enableRedistributableFirmware = true;
   hardware.firmware = [ pkgs.linux-firmware ];
   boot.extraModulePackages = [ config.boot.kernelPackages.rtl88x2bu ];
 
@@ -48,22 +48,7 @@
   networking.hostName = "nixos";
   networking.networkmanager = {
     enable = true;
-    wifi.backend = "iwd";
     wifi.powersave = false;
-    dns = "systemd-resolved";
-  };
-  
-  networking.wireless.iwd = {
-    enable = true;
-    settings = {
-      General = {
-        EnableNetworkConfiguration = true;
-        AddressRandomization = "network"; # Better privacy, less router trouble than "always"
-      };
-      Settings = {
-        AutoConnect = true;
-      };
-    };
   };
 
   # TCP Stack Optimizations (Gaming & Latency)
@@ -132,6 +117,7 @@
   services.geoclue2.enable = false;
   services.packagekit.enable = false;
   services.fstrim.enable = true;
+  services.irqbalance.enable = true;
 
   # Bluetooth (centralized)
   hardware.bluetooth = {
@@ -146,8 +132,16 @@
         # Consumer earbuds usually need lower security settings to connect reliably
         Privacy = "off";
         JustWorksRepairing = "always";
-        MinEncryptionKeySize = 7; # Most earbuds use 7 or 8
+        MinEncryptionKeySize = 7;
         ExperimentalBatteryReporting = true;
+        # Support multiple profiles (A2DP & HFP) simultaneously
+        MultiProfile = "multiple";
+        # Faster discovery and reconnection
+        AutoConnectTimeout = 60;
+      };
+      # Better support for modern Bluetooth mice and game controllers
+      Input = {
+        UserspaceHID = true;
       };
       # Reconnect automatically
       Policy = {
@@ -211,7 +205,7 @@
   services.envfs.enable = true;
 
   # ── Security ───────────────────────────────────────────────────
-  security.sudo.enable = false;
+  security.sudo.enable = true;
   security.doas = {
     enable = true;
     extraRules = [
@@ -222,7 +216,7 @@
       }
     ];
   };
-  # Alias sudo → doas for muscle memory
+  # Alias sudo → doas if preferred, but keep both for compatibility
   environment.shellAliases.sudo = "doas";
 
   security.pam.services.login.failDelay = {
@@ -273,6 +267,7 @@
     home-manager
 
     # AI Coding Tools (from unstable)
+    unstable.lmstudio
     unstable.codex
     unstable.gemini-cli
     unstable.qwen-code
@@ -320,7 +315,17 @@
   };
 
   # ── Swap & Performance ────────────────────────────────────────
-  zramSwap.enable = true;
+  zramSwap = {
+    enable = true;
+    memoryPercent = 50; # Allow up to 50% of RAM to be compressed (great for AI)
+  };
+
+  # Prevent full system lockups when Games or LM Studio use too much memory
+  services.earlyoom = {
+    enable = true;
+    enableNotifications = true;
+    freeMemThreshold = 5; # Kill heaviest process if free RAM drops below 5%
+  };
 
   # ── Nix Settings ──────────────────────────────────────────────
   nix.settings = {

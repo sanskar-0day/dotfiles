@@ -113,6 +113,10 @@
       wifi-list = "nmcli device wifi list";
       wifi-audit = "nmcli device show wlan0 && nmcli connection show --active && resolvectl status";
       
+      # ── Kanata Control ──────────────────────────────────────────────────
+      game-on = "sudo systemctl stop kanata-default.service && notify-send 'Keyboard' 'Gaming Mode (Kanata OFF)'";
+      game-off = "sudo systemctl start kanata-default.service && notify-send 'Keyboard' 'Typing Mode (Kanata ON)'";
+
       # Reset Bluetooth and Audio stack (Fixes "Visible but not connecting")
       bt-fix = "sudo rfkill unblock bluetooth && sudo systemctl restart bluetooth && systemctl --user restart pipewire wireplumber && bluetoothctl power on && echo 'Bluetooth and Audio stack reset. Try connecting now.'";
       # Complete reset (unpairs all devices — use as last resort)

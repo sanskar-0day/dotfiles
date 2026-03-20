@@ -97,20 +97,31 @@ if command -v any-nix-shell &>/dev/null; then
   any-nix-shell zsh --info-right | source /dev/stdin
 fi
 
-# Auto-enter nix environments on 'cd'
-_nix_shell_detect() {
-  if [[ -f "shell.nix" && "$IN_NIX_SHELL" != "1" ]]; then
-    echo "%F{blue}󱄅 %fProject environment detected (shell.nix). Entering..."
-    exec nix-shell
-  elif [[ -f "flake.nix" && "$IN_NIX_SHELL" != "1" ]]; then
-     echo "%F{blue}󱄅 %fFlake detected. Entering dev shell..."
-     exec nix develop
-  fi
-}
-autoload -U add-zsh-hook
-add-zsh-hook chpwd _nix_shell_detect
+# Direnv integration
+if command -v direnv &>/dev/null; then
+  eval "$(direnv hook zsh)"
+fi
 
 # ── Helper Functions ─────────────────────────────────────────────────────────
+
+# WiFi driver toggle (external RTL8822BU ↔ internal MediaTek)
+wifi-mt() {
+  echo "Switching to MediaTek (mt7921e)..." >&2
+  sudo rfkill unblock wifi
+  sudo modprobe -r 88x2bu 2>/dev/null || true
+  sudo modprobe mt7921_common 2>/dev/null || true
+  sudo modprobe mt7921e 2>/dev/null || true
+  sudo systemctl restart NetworkManager
+}
+
+wifi-fix() {
+  echo "Switching back to RTL8822BU (88x2bu)..." >&2
+  sudo rfkill unblock wifi
+  sudo modprobe -r mt7921e 2>/dev/null || true
+  sudo modprobe -r mt7921_common 2>/dev/null || true
+  sudo modprobe 88x2bu 2>/dev/null || true
+  sudo systemctl restart NetworkManager
+}
 
 # Search packages with fuzzy preview
 ns() {
@@ -122,6 +133,19 @@ ns() {
 
 # Quick project setup
 mkcd() { mkdir -p "$1" && cd "$1"; }
+
+# Quick Edit Dotfiles
+dots() { cd ~/dotfiles && $EDITOR .; }
+
+# Search unstable packages
+nu() {
+  nix search github:NixOS/nixpkgs/nixos-unstable#"$1" --json 2>/dev/null \
+    | jq -r 'to_entries[] | "\(.key)\t\(.value.description)"' \
+    | column -t -s $'\t' \
+    | fzf --ansi --header "Unstable Packages"
+}
+
+ni() { nix shell nixpkgs#"$1"; }
 
 # Extract everything
 extract() {
@@ -146,13 +170,4 @@ extract() {
 # Zoxide (Smart CD)
 if command -v zoxide &>/dev/null; then
   eval "$(zoxide init zsh)"
-  alias cd='z'
-  alias cdi='zi'
-fi
-
-# Welcome Message (Fastfetch)
-if [[ -z "$TMUX" && "$-" == *i* ]]; then
-  if command -v fastfetch >/dev/null; then
-    fastfetch --config "$HOME/.config/fastfetch/config.jsonc"
-  fi
 fi
