@@ -125,16 +125,6 @@
 
     # External scripts/hooks and main configuration
     initContent = ''
-      # Atuin History Search
-      if command -v atuin &>/dev/null; then
-        eval "$(atuin init zsh --disable-up-arrow)"
-      fi
-
-      # Starship Prompt
-      if command -v starship &>/dev/null; then
-        eval "$(starship init zsh)"
-      fi
-
       ${builtins.readFile ./zshrc}
     '';
   };
