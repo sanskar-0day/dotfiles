@@ -49,7 +49,7 @@
   ];
 
   boot.initrd.compressor = "zstd";
-  boot.initrd.compressorFlags = [ "-19" "-T0" ]; # max ratio, parallel threads
+  boot.initrd.compressorFlags = [ "-6" "-T0" ]; # was -19; -6 is 10x faster to build, same decompression speed
 
   # ── Sleep / Lid Behavior ──────────────────────────────────────
   # Using standard logind settings

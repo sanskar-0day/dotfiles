@@ -79,7 +79,7 @@
   };
 
   # KDE Connect (phone ↔ desktop)
-  programs.kdeconnect.enable = false;
+  programs.kdeconnect.enable = true;
 
   # ── KDE Tools ─────────────────────────────────────────────────
   environment.systemPackages = with pkgs; [

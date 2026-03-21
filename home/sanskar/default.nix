@@ -112,6 +112,16 @@
     typstPackages.spreet
     typstPackages.truthfy
 
+    # ── Gaming & Performance ────────────────────────────────────
+    protonup-qt
+    protontricks
+    mission-center
+
+    # ── Terminal & Productivity ─────────────────────────────────
+    unstable.ghostty
+    obsidian
+    hyperfine
+
     # Nerd Fonts
     nerd-fonts.jetbrains-mono
     nerd-fonts.fira-code
@@ -119,52 +129,38 @@
 
   fonts.fontconfig.enable = true;
 
-  # Apply KWin performance settings declaratively (no manual script needed)
   xdg.configFile = {
-    "kwinrc" = {
-      force = true;
-      text = ''
-        [Compositing]
-        LatencyPolicy=Low
-        GLPlatformInterface=glx
-
-        [Plugins]
-        blurEnabled=false
-        contrastEnabled=false
-        translucencyEnabled=false
-      '';
-    };
-
-    "kdeglobals" = {
-      force = true;
-      text = ''
-        [KDE]
-        AnimationDurationFactor=0.2
-      '';
-    };
-
-    "ksplashrc" = {
-      force = true;
-      text = ''
-        [KSplash]
-        Theme=None
-        Engine=none
-      '';
-    };
-
-    "ksmserverrc" = {
-      force = true;
-      text = ''
-        [General]
-        loginMode=emptySession
-      '';
-    };
-
     # existing entries:
     "fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
     "fastfetch/logo.txt".source = ./fastfetch/logo.txt;
     "fastfetch/ghost.png".source = ../../images/ghost.png;
     "mimeapps.list".force = true;
+  };
+
+  # ── Shell & Terminal Tools ────────────────────────────────────
+  programs.yazi = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
+  programs.atuin = {
+    enable = true;
+    enableZshIntegration = true;
+    settings = {
+      auto_sync = false;
+      search_mode = "fuzzy";
+      style = "compact";
+      show_preview = true;
+    };
+  };
+
+  programs.zellij = {
+    enable = true;
+    settings = {
+      theme = "dracula";
+      default_layout = "compact";
+      pane_frames = false;
+    };
   };
 
   xdg.mimeApps = {

@@ -39,6 +39,28 @@
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
-    extraPackages = [ pkgs.nvidia-vaapi-driver ];
+    extraPackages = with pkgs; [
+      nvidia-vaapi-driver # existing — keep
+
+      # ── AMD iGPU (KWin + Vulkan translation layer) ──────────
+      rocmPackages.clr.icd # OpenCL — needed by some games/DX12 titles
+      amdvlk # AMD official Vulkan alongside Mesa radv
+
+      # ── Vulkan infrastructure ────────────────────────────────
+      vulkan-loader
+      vulkan-validation-layers
+      vulkan-extension-layer
+
+      # ── Video decode (game cutscenes, Firefox, VLC) ──────────
+      libva
+      libva-utils
+      vaapiVdpau
+      libvdpau-va-gl
+    ];
+    extraPackages32 = with pkgs.pkgsi686Linux; [
+      # 32-bit Vulkan for older games and Wine
+      vulkan-loader
+      amdvlk
+    ];
   };
 }
