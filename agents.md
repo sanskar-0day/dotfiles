@@ -1,55 +1,51 @@
 # 🤖 Agent Architecture & Constraint Guide
 
-This document is the source of truth for AI agents interacting with this NixOS configuration. Follow the constraints below; they are based on real stability issues and deliberate performance tradeoffs.
+This document is the source of truth for AI agents interacting with this NixOS configuration. It covers surgical optimizations, hardware constraints, and workflow patterns.
 
-## ⚠️ CRITICAL CONSTRAINTS
+## ⚠️ CRITICAL CONSTRAINTS (DO NOT BREAK)
 
-1. **Bootloader Integrity (`modules/boot.nix`)**: This system uses a minimal `systemd-boot` setup. **Do NOT** install GRUB or Plymouth. The system previously suffered boot hangs due to initrd conflicts.
-   - Current state: `timeout = 1`, `systemd.initrd = true`, `consoleLogLevel = 0`, no Plymouth.
-2. **NVIDIA Driver Hot-Swapping**: Do **not** run `nixos-rebuild switch` for kernel/driver changes. Always use `nrb` (boot) and reboot.
-3. **Hardware Regeneration**: `hosts/nixos/hardware.nix` includes `noatime` mount options. Preserve them if regenerating hardware config.
-4. **Display Server**: KDE Plasma 6 runs on **X11** via SDDM; Wayland is disabled for NVIDIA stability.
+1.  **Display Server Integrity**:
+    -   **X11 ONLY**: All KDE Plasma sessions run on X11 via SDDM. Wayland is disabled for NVIDIA driver stability.
+    -   **NO Wayland Env Vars**: Never add `NIXOS_OZONE_WL`, `MOZ_ENABLE_WAYLAND`, `QT_QPA_PLATFORM=wayland`, or `GDK_BACKEND=wayland`. These cause hangs and crashes on this NVIDIA setup.
+2.  **Bootloader Safety (`modules/boot.nix`)**:
+    -   Minimal `systemd-boot` with `timeout = 1`.
+    -   **NO Plymouth**: Previously caused initrd hangs.
+    -   **pinned Kernel**: Uses `linuxPackages_6_12` for production NVIDIA stability.
+3.  **Kernel/Driver Deployment**:
+    -   Always use `nrb` (boot/reboot) for kernel or NVIDIA driver changes. Never use `switch`.
 
 ---
 
-## 🏗️ Flake Architecture
+## 🏗️ System Architecture
 
-- **Dual Channels**: `nixos-25.11` → `pkgs`, `nixos-unstable` → `unstable`.
-- **Injection**: `unstable` is passed via `specialArg` (NixOS) and `extraSpecialArg` (Home Manager).
-- **Kernel Pinning**: `linuxPackages_6_12` is pinned for NVIDIA stability.
+### 🚀 Responsiveness Stack
+- **ananicy-cpp**: Auto-renicing (rules in `ananicy-cpp` package).
+- **earlyoom**: Thresholds set at 5% RAM / 10% Swap to prevent lockups.
+- **nix-daemon**: Isolated at `idle` priority with a 60% CPU cap.
 
-## 🎮 Gaming Subsystem (`modules/gaming.nix`)
+### 🌐 Networking (The `resolved` fix)
+- **services.resolved**: Enabled with opportunistic DNSoverTLS.
+- **NO networking.nameservers**: Conflicts with resolved's loopback listener.
+- **TCP BBR**: requires `tcp_bbr` in `boot.kernelModules` and `fq` qdisc.
 
-- Wine Staging + Winetricks + Lutris/Bottles/Heroic.
-- GameMode enabled with GPU optimizations accepted.
-- Steam enabled with Remote Play/Dedicated Server firewall rules.
-- Gamescope session enabled (use only if stable).
-- FitGirl fixes: very high `vm.max_map_count` and unlimited stack.
+### 🎮 Graphics & Gaming
+- **AMD iGPU**: DC FP16 filter (`amdgpu.dcfeaturemask=0x8`) for smoother Plasma frames.
+- **NVIDIA Prime**: Production branch (`550.x` or similar) with offload scripts.
+- **Vulkan Infrastructure**: Full loader and validation layers for both AMD and NVIDIA.
+- **Shader Caches**: Persistent directories in `~/.cache` via `tmpfiles.rules`.
 
-**Note**: The Wine auto-prefix runner was removed with the repo `scripts/` cleanup.
+### 🛠️ Developer Workflow
+- **devShells**: Specialized toolchains live in `flake.nix` (e.g., `ds`, `web`).
+- **Global Trim**: Keep `home.packages` limited to cross-project utilities.
+- **Automated QA**: `nix flake check` builds the system closures to verify syntax/logic.
 
-## 💻 Shell & Editor Design
+---
 
-### Zsh
-- System enables Zsh; Home Manager manages config.
-- `home/sanskar/zshrc` is the canonical file; HM reads it.
-- Keep `jq` + `fzf` in the environment for `ns`/`nu` functions.
+## 🔧 Maintenance Notes
 
-### Neovim
-- Do **not** use `programs.neovim.plugins` in Nix.
-- LazyVim requires writable plugin state under `~/.local/share/nvim`.
-- Nix only provides binaries via `programs.neovim.extraPackages`.
+- **Logs**: Journald capped at 1GB; Coredumps capped at 1GB (Storage=journal).
+- **Disk**: NVMe uses `none` scheduler; SATA SSDs use `bfq`.
+- **Power**: AC/Battery switching handled via `power-profile-ac.service` triggered by udev tags.
 
-## 🌐 Networking & Nix Settings
-
-- NetworkManager wait-online is disabled for faster boot.
-- Substituters include NixOS + USTC/Tsinghua/SJTU mirrors.
-- `stalled-download-timeout = 5` and `connect-timeout = 5`.
-- Build limits: `max-jobs = 4`, `cores = 4`.
-
-## 🔧 System Defaults & Trims
-
-- `power-profiles-daemon` enabled; `auto-cpufreq` disabled.
-- Disabled services: OpenSSH, Flatpak, WARP, Avahi, printing, geoclue, PackageKit, ModemManager.
-- Bluetooth core enabled; `blueman` disabled to reduce autostart overhead.
-
+## ⌨️ Kanata Keyboard Design
+Tap/Hold behaviors are sensitive. Timing is 200/200. Home-row mods are the primary efficiency gain.

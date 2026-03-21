@@ -5,8 +5,8 @@
   boot.loader = {
     systemd-boot = {
       enable = true;
-      editor = false;
-      configurationLimit = 20;
+      editor = false; # Security: Prevent kernel parameter editing at boot
+      configurationLimit = 10; # Keep boot partition clean
       consoleMode = "max";
     };
     efi = {
@@ -34,41 +34,61 @@
     "udev.log_priority=3"
     "fastboot"
     "noresume"
-    "nowatchdog"         # Disable hardware watchdog IRQ — small but consistent win
-    "mitigations=off"    # OPTIONAL: removes Spectre/Meltdown mitigations (~10% perf boost)
-    # Bluetooth: disable autosuspend (fixes laptop connection lag/drops)
-    "btusb.enable_autosuspend=n"
-    # Ensure amdgpu and nvidia don't fight over framebuffers
-    "video=efifb:off" 
+    "splash"
     "boot.shell_on_fail"
-
-    # ── AMD iGPU (KWin runs here) ──────────────────────────────
-    "amdgpu.ppfeaturemask=0xffffffff" # unlock all power/perf features
-    "amdgpu.dcfeaturemask=0x8"        # enable DC FP16 filter (smoother compositing)
-    "amdgpu.freesync_video=1"         # smoother frame pacing on display output
+    "nvidia-drm.modeset=1" # Required for Wayland (if used) and PRIME offload
+    "nvidia.NVreg_PreserveVideoMemoryAllocations=1" # Better suspend/resume on NVIDIA
+    "mitigations=off" # Disable CPU security mitigations for ~5-10% perf gain (Safe for non-server)
+    "nowatchdog" # Disable hardware watchdog to stop periodic interrupts
+    "amdgpu.dcfeaturemask=0x8" # Enable DC FP16 filter for smoother iGPU frames
+    "amdgpu.ppfeaturemask=0xffffffff" # Required for GPU overclocking/undervolting
   ];
 
   boot.initrd.compressor = "zstd";
-  boot.initrd.compressorFlags = [ "-6" "-T0" ]; # was -19; -6 is 10x faster to build, same decompression speed
+  boot.initrd.compressorArgs = [ "-6" "-T0" ]; # was -19; -6 is 10x faster to build, same decompression speed
 
-  # ── Sleep / Lid Behavior ──────────────────────────────────────
-  # Using standard logind settings
-  services.logind.settings.Login = {
-    HandlePowerKey = "suspend";
-    HandlePowerKeyLongPress = "poweroff";
-    HandleLidSwitch = "suspend";
-    HandleLidSwitchExternalPower = "ignore";
-    HandleLidSwitchDocked = "ignore";
-    HandleSuspendKey = "suspend";
-    HandleSuspendKeyLongPress = "ignore";
-    HandleHibernateKey = "ignore";
-    IdleAction = "suspend";
-    IdleActionSec = "30min";
-    LidSwitchIgnoreInhibited = true;
-    AllowSuspend = "yes";
-    AllowHibernation = "no";
-    AllowHybridSleep = "no";
-    AllowIdle = "yes";
+  # ── Kernel Hardening & Performance ──────────────────────────
+  boot.kernel.sysctl = {
+    # Net: Faster TCP throughput (BBR)
+    "net.core.default_qdisc" = "fq";
+    "net.ipv4.tcp_congestion_control" = "bbr";
+
+    # Disk: SSD + RAM responsiveness
+    "vm.swappiness" = 10; # Prefer RAM over swap
+    "vm.dirty_ratio" = 10; # Flush dirty pages earlier to SSD
+    "vm.dirty_background_ratio" = 5;
+    "vm.vfs_cache_pressure" = 50; # Keep file indexes in RAM longer
+    "kernel.nmi_watchdog" = 0; # Disable non-maskable interrupt watchdog
+    "kernel.unprivileged_userns_clone" = 1; # Required for Rootless containers
+  };
+
+  # ── Hardware & Services ──────────────────────────────────────
+  # Enable EarlyOOM to prevent system-wide lockups during heavy RAM usage
+  services.earlyoom = {
+    enable = true;
+    freeMemThreshold = 5; # Kill heaviest process when RAM < 5%
+    freeSwapThreshold = 10;
+  };
+
+  # Thermald: Prevents thermal throttling stutters
+  services.thermald.enable = true;
+
+  # Logind: Opinionated suspend/idle behavior
+  services.logind = {
+    settings.Login = {
+      HandlePowerKey = "poweroff";
+      HandleLidSwitch = "suspend";
+      HandleLidSwitchExternalPower = "ignore";
+      HandleSuspendKey = "suspend";
+      HandleSuspendKeyLongPress = "ignore";
+      HandleHibernateKey = "ignore";
+      IdleAction = "ignore";
+      IdleActionSec = "30min";
+      AllowSuspend = "yes";
+      AllowHibernation = "no";
+      AllowHybridSleep = "no";
+      AllowIdle = "yes";
+    };
   };
 
   # ── Systemd Optimizations ────────────────────────────────────

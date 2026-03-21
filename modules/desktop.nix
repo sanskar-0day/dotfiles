@@ -7,29 +7,37 @@
   services.displayManager.sddm.wayland.enable = false;
   services.displayManager.defaultSession = "plasma";
   services.desktopManager.plasma6.enable = true;
-  environment.plasma6.excludePackages = with pkgs.kdePackages; [
-    khelpcenter                # Offline help center
-    elisa                      # Media player (you have VLC)
-    discover                   # Package manager GUI (you use Nix)
-    drkonqi                    # Crash reporter
-    oxygen                     # Old theme (you use Breeze)
-  ];
 
   # ── Plasma 6 & Nvidia Optimizations ─────────────────────────
+  # ── Environment Variables ──────────────────────────────────────
+  # Opinionated X11-only vars for NVIDIA stability.
+  # CRITICAL: We DO NOT add MOZ_ENABLE_WAYLAND or OZONE_WL here.
   environment.sessionVariables = {
-    # ── NVIDIA/KWin X11 fixes (these are real and valid) ──
-    KWIN_DRM_USE_MODIFIERS = "0";          # Prevents NVIDIA modifier conflicts
-    KWIN_TRIPLE_BUFFER = "1";              # Required: KWin can't auto-detect NVIDIA triple buffer
-    KWIN_X11_NO_SYNC_TO_VBLANK = "1";     # Reduce compositing latency
-    KWIN_X11_FORCE_SOFTWARE_VSYNC = "1";  # REQUIRED pair for NO_SYNC_TO_VBLANK, prevents unbounded render loop
+    # NVIDIA/KWin X11 specific fixes
+    KWIN_DRM_USE_MODIFIERS = "0"; # Prevents artifacting on some NVIDIA cards
+    KWIN_TRIPLE_BUFFER = "1"; # Critical for NVIDIA X11 smoothness
+    KWIN_X11_NO_SYNC_TO_VBLANK = "1"; # Reduce compositing latency
+    KWIN_X11_FORCE_SOFTWARE_VSYNC = "1"; # Prevents unbounded render loops with NO_SYNC
 
-    # ── Suppress Qt debug noise (valid) ──
+    # Suppress Qt debug noise in terminal
     QT_LOGGING_RULES = "*.debug=false;qt.qpa.wayland=false";
 
-    # ── DO NOT add NIXOS_OZONE_WL, MOZ_ENABLE_WAYLAND,    ──
-    # ── GDK_BACKEND=wayland, QT_QPA_PLATFORM=wayland here ──
-    # ── You are on X11 — Wayland vars BREAK apps          ──
+    # Force Electron apps to use X11 backends (prevents transparent windows)
+    ELECTRON_OZONE_PLATFORM_HINT = "x11";
   };
+
+  # ── Bloat Removal ─────────────────────────────────────────────
+  # We exclude these from the default Plasma install to keep the
+  # system lean and the application menu clean.
+  environment.plasma6.excludePackages = with pkgs.kdePackages; [
+    khelpcenter # Offline help (browser is enough)
+    elisa # Basic music player (VLC is better)
+    discover # GUI package manager (Nix is preferred)
+    drkonqi # Crash reporter
+    oxygen # Legacy theme
+    kate # We use Neovim/VSCode
+    krdp # Remote desktop service
+  ];
 
   # Disable Baloo (File Indexing) - Major source of stutter and disk I/O
   systemd.user.services.baloo = {
@@ -81,37 +89,11 @@
   # KDE Connect (phone ↔ desktop)
   programs.kdeconnect.enable = true;
 
+  # AMD GPU Tuning
+  programs.corectrl.enable = true;
+
   # ── KDE Tools ─────────────────────────────────────────────────
   environment.systemPackages = with pkgs; [
-    # Custom script to quickly apply performance tweaks to KDE
-    (pkgs.writeShellScriptBin "plasma-fast-boot" ''
-      echo "Applying ULTIMATE Plasma 6 Performance Tweaks..."
-      
-      # 1. Disable Splash Screen (Instant Login)
-      kwriteconfig6 --file ksplashrc --group "KSplash" --key "Theme" "None"
-      kwriteconfig6 --file ksplashrc --group "KSplash" --key "Engine" "none"
-      
-      # 2. Set Session to Start Empty (Instant Taskbar)
-      kwriteconfig6 --file ksmserverrc --group "General" --key "loginMode" "emptySession"
-      
-      # 3. Animations: Super Fast (0.2)
-      kwriteconfig6 --file kdeglobals --group "KDE" --key "AnimationDurationFactor" 0.2
-      
-      # 4. Disable Heavy Desktop Effects (Blur and Contrast are the heaviest)
-      kwriteconfig6 --file kwinrc --group "Plugins" --key "blurEnabled" false
-      kwriteconfig6 --file kwinrc --group "Plugins" --key "contrastEnabled" false
-      kwriteconfig6 --file kwinrc --group "Plugins" --key "translucencyEnabled" false
-      
-      # 5. Disable Background Services
-      kwriteconfig6 --file akonadi-firstrunrc --group "General" --key "AkonadiEnabled" false
-      
-      # 6. Optimize KWin for Speed
-      kwriteconfig6 --file kwinrc --group "Compositing" --key "LatencyPolicy" "Low"
-      kwriteconfig6 --file kwinrc --group "Compositing" --key "GLPlatformInterface" "glx"
-      
-      echo "Done! Restarting KWin/Plasma is recommended (or just log out and in)."
-    '')
-
     kdePackages.partitionmanager # Disk/partition management
     kdePackages.ark # Archive manager
     kdePackages.filelight # Disk usage visualizer

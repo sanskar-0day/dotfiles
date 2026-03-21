@@ -3,9 +3,22 @@
   # ── Docker ─────────────────────────────────────────────────────
   virtualisation.docker = {
     enable = true;
-    daemon.settings.dns = ["1.1.1.1" "8.8.8.8" "8.8.4.4"];
+    daemon.settings = {
+      dns = [
+        "1.1.1.1"
+        "8.8.8.8"
+        "8.8.4.4"
+      ];
+      "log-driver" = "local"; # 100MB cap per container, auto-rotates
+      "log-opts" = {
+        "max-size" = "10m";
+        "max-file" = "3";
+      };
+      "storage-driver" = "overlay2"; # already the default, but explicit is safer
+      "experimental" = false;
+    };
     # Socket-activated: starts on first `docker` command
-    enableOnBoot = false; 
+    enableOnBoot = false;
   };
 
   # ── QEMU / KVM ────────────────────────────────────────────────

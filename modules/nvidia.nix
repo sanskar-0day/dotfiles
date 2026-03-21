@@ -1,20 +1,29 @@
 { config, pkgs, ... }:
 {
+  # Load NVIDIA driver for Xorg and Wayland
   services.xserver.videoDrivers = [ "nvidia" ];
 
   hardware.nvidia = {
+    # Modesetting is required for PRIME offload to work
     modesetting.enable = true;
-    # Required for the GPU to truly power down when not in use (Silence!)
+    # Power management for modern (Turing+) NVIDIA laptops
     powerManagement.enable = true;
     powerManagement.finegrained = true;
-    open = false;
+    # Use the open-source kernel module (Safe for modern cards)
+    open = true;
+    # Settings GUI
     nvidiaSettings = true;
+    # Use the production-ready driver branch
     package = config.boot.kernelPackages.nvidiaPackages.production;
+    # PRIME Offload: Manage the hybrid AMD + NVIDIA setup
     prime = {
-      offload.enable = true;
-      offload.enableOffloadCmd = true;
+      offload = {
+        enable = true;
+        enableOffloadCmd = true;
+      };
+      # Bus IDs found via `lspci`
       nvidiaBusId = "PCI:1:0:0";
-      amdgpuBusId = "PCI:5:0:0";
+      amdgpuBusId = "PCI:101:0:0";
     };
   };
 
@@ -44,7 +53,6 @@
 
       # ── AMD iGPU (KWin + Vulkan translation layer) ──────────
       rocmPackages.clr.icd # OpenCL — needed by some games/DX12 titles
-      amdvlk # AMD official Vulkan alongside Mesa radv
 
       # ── Vulkan infrastructure ────────────────────────────────
       vulkan-loader
@@ -54,13 +62,12 @@
       # ── Video decode (game cutscenes, Firefox, VLC) ──────────
       libva
       libva-utils
-      vaapiVdpau
+      libva-vdpau-driver
       libvdpau-va-gl
     ];
     extraPackages32 = with pkgs.pkgsi686Linux; [
       # 32-bit Vulkan for older games and Wine
       vulkan-loader
-      amdvlk
     ];
   };
 }

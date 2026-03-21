@@ -67,7 +67,7 @@
             # Pass pkgs-unstable to home-manager
             home-manager.extraSpecialArgs = { inherit inputs unstable; };
             # Add plasma-manager as a shared module
-            home-manager.sharedModules = [ inputs.plasma-manager.homeManagerModules.plasma-manager ];
+            home-manager.sharedModules = [ inputs.plasma-manager.homeModules.plasma-manager ];
           }
 
           # 3. Nix-index database for faster package searching
@@ -94,5 +94,35 @@
       packages.${system}.docs = import ./docs/builder.nix {
         inherit (pkgs) lib runCommand typst;
       };
+
+      # ── Development Shells (Project Stacks) ─────────────────────
+      # Access via `nix develop .#<name>`
+      devShells.${system} = {
+        # Data science / IITM stack
+        ds = pkgs.mkShell {
+          packages = with pkgs; [
+            python313
+            python313Packages.numpy
+            python313Packages.pandas
+            python313Packages.jupyterlab
+            python313Packages.matplotlib
+            python313Packages.scikit-learn
+          ];
+        };
+
+        # Web freelancing stack
+        web = pkgs.mkShell {
+          packages = with pkgs; [
+            nodejs_22
+            bun
+            git
+            just
+          ];
+        };
+      };
+
+      # ── Automated Checks ────────────────────────────────────────
+      # `nix flake check` — verifies the config builds before deploying
+      checks.${system}.nixos-config = self.nixosConfigurations.nixos.config.system.build.toplevel;
     };
 }

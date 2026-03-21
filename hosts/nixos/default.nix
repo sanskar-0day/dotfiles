@@ -25,6 +25,7 @@
     "kvm_amd"
     "iptables_nat"
     "ip_tables"
+    "tcp_bbr" # Required for BBR sysctl
   ];
 
   boot.blacklistedKernelModules = [
@@ -58,32 +59,25 @@
     "net.core.wmem_max" = 16777216;
     "net.ipv4.tcp_rmem" = "4096 87380 16777216";
     "net.ipv4.tcp_wmem" = "4096 65536 16777216";
-    
+
     # ── TCP fast open ───────────────────────────────────────────
     "net.ipv4.tcp_fastopen" = 3;
-    
-    # ── BBR Congestion Control ──────────────────────────────────
-    "net.core.default_qdisc" = "fq";
-    "net.ipv4.tcp_congestion_control" = "bbr";
 
-    # ── SSD + RAM responsiveness ────────────────────────────────
-    "vm.swappiness" = 10;           # Prefer RAM; only swap to zram under pressure
-    "vm.dirty_ratio" = 10;          # Flush dirty pages earlier (better for SSD)
-    "vm.dirty_background_ratio" = 5;
-    "vm.vfs_cache_pressure" = 50;   # Keep dentry/inode cache longer = faster app open
-    "kernel.nmi_watchdog" = 0;      # Disable NMI watchdog, saves ~1% CPU
-    "kernel.unprivileged_userns_clone" = 1; # Needed for containers without root
+
   };
-  
+
   # systemd-resolved for better DNS handling (required for WARP)
   services.resolved = {
     enable = true;
-    fallbackDns = [ "8.8.4.4" "9.9.9.9" ];
+    dnssec = "allow-downgrade";
+    dnsovertls = "opportunistic"; # encrypts DNS queries
     domains = [ "~." ];
+    fallbackDns = [
+      "1.1.1.1#cloudflare-dns.com"
+      "9.9.9.9#dns.quad9.net"
+      "8.8.4.4#dns.google"
+    ];
   };
-
-  # Global DNS nameservers
-  networking.nameservers = [ "1.1.1.1" "8.8.8.8" "1.0.0.1" ];
 
   systemd.services.NetworkManager-wait-online.enable = false;
 
@@ -92,15 +86,35 @@
     enable = true;
     # Allow local traffic and specific services
     allowPing = true;
-    
-    # KDE Connect
-    allowedTCPPortRanges = [ { from = 1714; to = 1764; } ];
-    allowedUDPPortRanges = [ { from = 1714; to = 1764; } ];
-    
-    # WARP / VPN Compatibility
+
+    # KDE Connect ports (for phone ↔ desktop sync)
+    allowedTCPPortRanges = [
+      {
+        from = 1714;
+        to = 1764;
+      }
+    ];
+    allowedUDPPortRanges = [
+      {
+        from = 1714;
+        to = 1764;
+      }
+    ];
+
+    # WARP / VPN Compatibility (allows reverse path traffic)
     checkReversePath = "loose";
     logReversePathDrops = false;
   };
+
+  # Shader Cache Persistence
+  # These ensure shader caches are created and owned by the user on boot,
+  # preventing first-launch stutters in games and AI apps.
+  systemd.tmpfiles.rules = [
+    "d /home/sanskar/.cache/dxvk           0755 sanskar users -"
+    "d /home/sanskar/.cache/mesa_shaders   0755 sanskar users -"
+    "d /home/sanskar/.cache/nvidia-shaders 0755 sanskar users -"
+    "d /home/sanskar/.cache/vkd3d-proton   0755 sanskar users -"
+  ];
 
   # ── Locale / Time ─────────────────────────────────────────────
   time.timeZone = "Asia/Kolkata";
@@ -116,6 +130,24 @@
     LC_TIME = "en_IN";
   };
 
+  # ── System Maintenance ─────────────────────────────────────────
+  # ── Logging & Auditing ─────────────────────────────────────────
+  # Journald: cap log size, keep logs useful but bounded
+  services.journald.extraConfig = ''
+    SystemMaxUse=1G
+    RuntimeMaxUse=256M
+    MaxFileSec=1month
+    MaxRetentionSec=3month
+  '';
+
+  # Coredumps: Keep small backtraces, not multi‑GB dumps
+  systemd.coredump.extraConfig = ''
+    Storage=journal
+    ProcessSizeMax=500M
+    Compress=yes
+    MaxUse=1G
+  '';
+
   # ── Services ───────────────────────────────────────────────────
   services.openssh.enable = false;
   services.flatpak.enable = true;
@@ -124,13 +156,13 @@
   services.printing.enable = false;
   services.geoclue2.enable = false;
   services.packagekit.enable = false;
-  services.fstrim.enable = true;
+  services.fstrim.enable = true; # Trim SSD regularly
   services.irqbalance.enable = true;
 
-  # Bluetooth (centralized)
+  # Bluetooth Configuration (centralized)
   hardware.bluetooth = {
     enable = true;
-    powerOnBoot = true;
+    powerOnBoot = false; # Save battery, only power on if toggled
     settings = {
       General = {
         Experimental = true;
@@ -153,7 +185,7 @@
       };
       # Reconnect automatically
       Policy = {
-        AutoEnable = true;
+        AutoEnable = "false"; # Don't power on adapter automatically
         ReconnectAttempts = 15;
         ReconnectInterval = 1;
       };
@@ -161,15 +193,17 @@
   };
   services.blueman.enable = false;
 
-  # Power Management
+  # Power Management (using power-profiles-daemon)
   services.power-profiles-daemon.enable = true;
 
+  # Auto-switch profiles on AC/Battery events
   systemd.services.power-profile-ac = {
     description = "Set power profile to performance on AC";
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${pkgs.power-profiles-daemon}/bin/powerprofilesctl set performance";
     };
+    wantedBy = [ "multi-user.target" ];
   };
 
   systemd.services.power-profile-battery = {
@@ -178,14 +212,33 @@
       Type = "oneshot";
       ExecStart = "${pkgs.power-profiles-daemon}/bin/powerprofilesctl set balanced";
     };
+    wantedBy = [ "multi-user.target" ];
   };
 
-  # Touchpad
+  # ── Backups ────────────────────────────────────────────────────
+  # Borg Backup: Daily snapshots of critical data
+  # services.borgbackup.jobs."home-backup" = {
+  #   paths = [ "/home/sanskar/dotfiles" "/home/sanskar/projects" "/home/sanskar/models" ];
+  #   repo = "ssh://user@server:22/~/borg-repos/sanskar";
+  #   encryption = {
+  #     mode = "repokey-blake2";
+  #     passCommand = "cat /etc/nixos/secret-borg-passphrase";
+  #   };
+  #   compression = "zstd,6";
+  #   prune.keep = {
+  #     within = "7d";
+  #     daily  = 7;
+  #     weekly = 4;
+  #     monthly = 6;
+  #   };
+  # };
+
+  # Touchpad Settings
   services.libinput.enable = true;
   services.libinput.touchpad.tapping = true;
   services.libinput.touchpad.naturalScrolling = true;
 
-  # Kanata – keyboard remapper
+  # Kanata: Advanced Keyboard Remapper (Caps → Esc/Ctrl)
   services.kanata = {
     enable = true;
     keyboards.default = {
@@ -247,6 +300,7 @@
       "lp"
       "bluetooth"
       "render"
+      "corectrl"
     ];
   };
 
@@ -338,18 +392,13 @@
   # ── Hardware & Performance ─────────────────────────────────────
   hardware.cpu.amd.updateMicrocode = true;
 
-  # AMD iGPU (Offload) Vulkan
-  hardware.amdgpu.amdvlk = {
-    enable = true;
-    support32Bit.enable = true;
-  };
-
-  # Automatic process re-nicing for desktop responsiveness
+  # Automatic process re-nicing for desktop responsiveness (Ananicy-cpp)
   services.ananicy = {
     enable = true;
     package = pkgs.ananicy-cpp;
+    rulesProvider = pkgs.ananicy-rules-cachyos;
     settings = {
-      cgroup_realtime_workaround = true;
+      cgroup_realtime_workaround = true; # Required for NixOS cgroups v2
     };
   };
 
@@ -407,10 +456,13 @@
       max-jobs = 4;
       cores = 4;
 
+      # Storage & Dev
+      auto-optimise-store = true;
+      keep-outputs = true;
+      keep-derivations = true;
+
       # Downloads
       max-substitution-jobs = 32;
-      http-connections = 64;
-      auto-optimise-store = true;
 
       trusted-users = [
         "root"
@@ -432,7 +484,7 @@
     };
 
     gc = {
-      automatic = true;
+      automatic = false; # Disabled in favor of nh.clean
       dates = "weekly";
       options = "--delete-older-than 14d";
       persistent = true;

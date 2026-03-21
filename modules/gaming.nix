@@ -1,50 +1,41 @@
 { config, pkgs, ... }:
 {
-  # ── Wine (Windows compatibility layer) ─────────────────────────
-  # wineWowPackages.stagingFull = 64-bit + 32-bit Wine Staging
-  # (better game compatibility than vanilla Wine)
+  # ── Wine & Windows Compatibility ──────────────────────────────
+  # We use stagingFull for the most up-to-date patches for modern games.
   environment.systemPackages = with pkgs; [
-    # Wine Staging (best for games — includes experimental patches)
     wineWowPackages.stagingFull
     winetricks
-
-    # Game launchers
     lutris
     bottles
-    heroic              # Epic Games / GOG launcher
-
-    # Performance
-    mangohud            # FPS overlay (Vulkan/OpenGL)
-    gamemode            # Feral's CPU/GPU optimizer
-    libstrangle         # FPS capping tool (prevents stutters)
-    
-    # Steam helpers
-    protontricks        # Winetricks for Proton games (essential for many games)
-    steam-run           # Run anything inside the Steam environment (FHS)
-    
-    # Vulkan support (required for DXVK — translates DirectX 9/10/11 → Vulkan)
+    heroic              # Epic / GOG Launcher
+    mangohud            # FPS/Thermal overlay
+    gamemode            # Feral's CPU/GPU prioritization daemon
+    libstrangle         # FPS capper (essential for variable refresh/sync)
+    protontricks        # Winetricks for Steam/Proton
+    steam-run           # Run binaries in the Steam FHS environment
     vulkan-tools
     vulkan-loader
   ];
 
-  # ── 32-bit support (required for most Windows games) ──────────
+  # ── 32-Bit Support ────────────────────────────────────────────
+  # Essential for older games and many Wine/Proton applications.
   hardware.graphics.enable32Bit = true;
 
-  # ── GameMode service ──────────────────────────────────────────
+  # ── GameMode Configuration ────────────────────────────────────
+  # Optimizes CPU governor, process nice, and GPU power level.
   programs.gamemode = {
     enable = true;
     settings = {
       general = {
-        renice = 15;                # Higher prioritize for game process
+        renice = 15; # High priority for games
         softrealtime = "auto";
         inhibit_screensaver = 1;
       };
       gpu = {
         apply_gpu_optimisations = "accept-responsibility";
         gpu_device = 0;
-        nv_powermode_offset = 1;    # Set NVIDIA to "Prefer Maximum Performance"
+        nv_powermode_offset = 1; # Set NVIDIA to "Prefer Maximum Performance"
       };
-      # Custom scripts when starting/stopping gamemode
       custom = {
         start = "notify-send 'GameMode' 'Turbo Active - GPU Max Performance'";
         stop = "notify-send 'GameMode' 'Turbo Disabled - Resetting'";
@@ -52,34 +43,28 @@
     };
   };
 
-  # ── Ananicy (Auto-Nice) ───────────────────────────────────────
-  # Automatically prioritizes games and heavy apps in the background
-  services.ananicy = {
-    enable = true;
-    package = pkgs.ananicy-cpp;
-    rulesProvider = pkgs.ananicy-rules-cachyos;
-  };
 
-  # ── Steam (already enabled, adding Proton extras) ─────────────
+  # ── Steam & Protocol Support ─────────────────────────────────
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
-    gamescopeSession.enable = true;   # Gamescope compositor for better perf
+    gamescopeSession.enable = true; # Micro-compositor for better frame pacing
     extraCompatPackages = [ pkgs.proton-ge-bin ];
   };
 
-  # ── Gamescope (micro-compositor for games) ────────────────────
+  # ── Gamescope ─────────────────────────────────────────────────
   programs.gamescope = {
     enable = true;
-    capSysNice = true;  # Allow priority scheduling
+    capSysNice = true;
   };
 
-  # ── Wine / FitGirl Repack memory fixes ───────────────────────
-  # FitGirl's Oodle decompressor needs huge stack + memory mappings
+  # ── Heavy Repack & Memory Fixes ───────────────────────────────
+  # Large games (especially repacks) need high memory mapping limits
+  # and unlimited stack size to prevent crashes during decompression.
   boot.kernel.sysctl = {
-    "vm.max_map_count" = 2147483642;  # Wine needs lots of memory mappings
-    "fs.file-max" = 524288;           # Prevent "too many open files" crashes in huge games
+    "vm.max_map_count" = 2147483642; # Prevents out-of-memory errors in Wine
+    "fs.file-max" = 524288;          # Higher open file limit
   };
   security.pam.loginLimits = [
     { domain = "*"; type = "hard"; item = "stack"; value = "unlimited"; }

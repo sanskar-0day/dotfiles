@@ -383,12 +383,6 @@ return {
     opts = {},
   },
 
-  -- Tmux navigator (seamless tmux <-> nvim pane navigation)
-  {
-    "christoomey/vim-tmux-navigator",
-    event = "VeryLazy",
-  },
-
   -- Highlight word under cursor
   {
     "RRethy/vim-illuminate",
