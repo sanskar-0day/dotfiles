@@ -19,6 +19,13 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Plasma manager for declarative KDE settings
+    plasma-manager = {
+      url = "github:nix-community/plasma-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
   };
 
   outputs =
@@ -59,6 +66,8 @@
 
             # Pass pkgs-unstable to home-manager
             home-manager.extraSpecialArgs = { inherit inputs unstable; };
+            # Add plasma-manager as a shared module
+            home-manager.sharedModules = [ inputs.plasma-manager.homeManagerModules.plasma-manager ];
           }
 
           # 3. Nix-index database for faster package searching
@@ -76,6 +85,7 @@
         modules = [
           ./home/sanskar
           nix-index-database.homeModules.nix-index
+          inputs.plasma-manager.homeModules.plasma-manager
         ];
       };
 

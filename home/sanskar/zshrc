@@ -15,10 +15,6 @@ export LESS="-R --mouse"
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 
-# Wayland / Toolkit defaults
-export MOZ_ENABLE_WAYLAND=1
-export QT_QPA_PLATFORM=wayland
-export GDK_BACKEND=wayland
 
 # Colored man pages via bat
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"

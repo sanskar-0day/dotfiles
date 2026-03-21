@@ -12,6 +12,7 @@
     ./tools.nix
     ./nvim.nix
     ./dev.nix
+    ./plasma.nix
   ];
 
   home.username = "sanskar";
@@ -118,11 +119,52 @@
 
   fonts.fontconfig.enable = true;
 
-  # Fastfetch config
+  # Apply KWin performance settings declaratively (no manual script needed)
   xdg.configFile = {
+    "kwinrc" = {
+      force = true;
+      text = ''
+        [Compositing]
+        LatencyPolicy=Low
+        GLPlatformInterface=glx
+
+        [Plugins]
+        blurEnabled=false
+        contrastEnabled=false
+        translucencyEnabled=false
+      '';
+    };
+
+    "kdeglobals" = {
+      force = true;
+      text = ''
+        [KDE]
+        AnimationDurationFactor=0.2
+      '';
+    };
+
+    "ksplashrc" = {
+      force = true;
+      text = ''
+        [KSplash]
+        Theme=None
+        Engine=none
+      '';
+    };
+
+    "ksmserverrc" = {
+      force = true;
+      text = ''
+        [General]
+        loginMode=emptySession
+      '';
+    };
+
+    # existing entries:
     "fastfetch/config.jsonc".source = ./fastfetch/config.jsonc;
     "fastfetch/logo.txt".source = ./fastfetch/logo.txt;
     "fastfetch/ghost.png".source = ../../images/ghost.png;
+    "mimeapps.list".force = true;
   };
 
   xdg.mimeApps = {
@@ -135,8 +177,6 @@
       "x-scheme-handler/unknown" = [ "firefox.desktop" ];
     };
   };
-
-  xdg.configFile."mimeapps.list".force = true;
 
   programs.home-manager.enable = true;
 

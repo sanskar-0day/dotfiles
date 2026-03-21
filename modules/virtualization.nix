@@ -4,6 +4,8 @@
   virtualisation.docker = {
     enable = true;
     daemon.settings.dns = ["1.1.1.1" "8.8.8.8" "8.8.4.4"];
+    # Socket-activated: starts on first `docker` command
+    enableOnBoot = false; 
   };
 
   # ── QEMU / KVM ────────────────────────────────────────────────

@@ -7,22 +7,28 @@
   services.displayManager.sddm.wayland.enable = false;
   services.displayManager.defaultSession = "plasma";
   services.desktopManager.plasma6.enable = true;
+  environment.plasma6.excludePackages = with pkgs.kdePackages; [
+    khelpcenter                # Offline help center
+    elisa                      # Media player (you have VLC)
+    discover                   # Package manager GUI (you use Nix)
+    drkonqi                    # Crash reporter
+    oxygen                     # Old theme (you use Breeze)
+  ];
 
   # ── Plasma 6 & Nvidia Optimizations ─────────────────────────
   environment.sessionVariables = {
-    # Fix Nvidia flickering/lag in Plasma 6
-    KWIN_DRM_USE_MODIFIERS = "0";
-    # Force Wayland for specific apps to avoid XWayland overhead
-    NIXOS_OZONE_WL = "1";
-    MOZ_ENABLE_WAYLAND = "1";
-    # Extreme Latency/Speed Tweaks
-    KWIN_X11_NO_SYNC_TO_VBLANK = "1"; # Absolute minimum input lag (may cause slight tearing)
-    KWIN_TRIPLE_BUFFER = "1";         # Smoother animations on Nvidia
-    # Turbo-charge startup by skipping unnecessary waits
-    KDE_SESSION_UID = "1";
-    PLASMA_USE_QT_SCENE_GRAPH_BACKEND = "opengl";
-    # Fix slow context menus and general Qt sluggishness
+    # ── NVIDIA/KWin X11 fixes (these are real and valid) ──
+    KWIN_DRM_USE_MODIFIERS = "0";          # Prevents NVIDIA modifier conflicts
+    KWIN_TRIPLE_BUFFER = "1";              # Required: KWin can't auto-detect NVIDIA triple buffer
+    KWIN_X11_NO_SYNC_TO_VBLANK = "1";     # Reduce compositing latency
+    KWIN_X11_FORCE_SOFTWARE_VSYNC = "1";  # REQUIRED pair for NO_SYNC_TO_VBLANK, prevents unbounded render loop
+
+    # ── Suppress Qt debug noise (valid) ──
     QT_LOGGING_RULES = "*.debug=false;qt.qpa.wayland=false";
+
+    # ── DO NOT add NIXOS_OZONE_WL, MOZ_ENABLE_WAYLAND,    ──
+    # ── GDK_BACKEND=wayland, QT_QPA_PLATFORM=wayland here ──
+    # ── You are on X11 — Wayland vars BREAK apps          ──
   };
 
   # Disable Baloo (File Indexing) - Major source of stutter and disk I/O
@@ -50,14 +56,27 @@
     alsa.support32Bit = true;
     pulse.enable = true;
     wireplumber.enable = true; # Manages Bluetooth audio profiles (essential)
+
+    extraConfig.pipewire."99-latency" = {
+      "context.properties" = {
+        "default.clock.rate" = 48000;
+        "default.clock.quantum" = 64; # 1.3ms latency (default: 1024 = 21ms)
+        "default.clock.min-quantum" = 32;
+        "default.clock.max-quantum" = 512;
+      };
+    };
   };
 
   # Bluetooth is configured centrally in hosts/nixos/default.nix
   services.blueman.enable = false;
 
   # Portals
-  xdg.portal.enable = true;
-  xdg.portal.extraPortals = [ pkgs.kdePackages.xdg-desktop-portal-kde ];
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.kdePackages.xdg-desktop-portal-kde ];
+    # Force KDE portal for everything to prevent hangs
+    config.common.default = "kde";
+  };
 
   # KDE Connect (phone ↔ desktop)
   programs.kdeconnect.enable = false;

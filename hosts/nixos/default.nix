@@ -53,18 +53,26 @@
 
   # TCP Stack Optimizations (Gaming & Latency)
   boot.kernel.sysctl = {
-    # Increase TCP buffer sizes for higher speeds
+    # ── Increase TCP buffer sizes for higher speeds ─────────────
     "net.core.rmem_max" = 16777216;
     "net.core.wmem_max" = 16777216;
     "net.ipv4.tcp_rmem" = "4096 87380 16777216";
     "net.ipv4.tcp_wmem" = "4096 65536 16777216";
     
-    # TCP fast open
+    # ── TCP fast open ───────────────────────────────────────────
     "net.ipv4.tcp_fastopen" = 3;
     
-    # BBR Congestion Control (Google's algo for better throughput on lossy networks)
+    # ── BBR Congestion Control ──────────────────────────────────
     "net.core.default_qdisc" = "fq";
     "net.ipv4.tcp_congestion_control" = "bbr";
+
+    # ── SSD + RAM responsiveness ────────────────────────────────
+    "vm.swappiness" = 10;           # Prefer RAM; only swap to zram under pressure
+    "vm.dirty_ratio" = 10;          # Flush dirty pages earlier (better for SSD)
+    "vm.dirty_background_ratio" = 5;
+    "vm.vfs_cache_pressure" = 50;   # Keep dentry/inode cache longer = faster app open
+    "kernel.nmi_watchdog" = 0;      # Disable NMI watchdog, saves ~1% CPU
+    "kernel.unprivileged_userns_clone" = 1; # Needed for containers without root
   };
   
   # systemd-resolved for better DNS handling (required for WARP)
@@ -155,10 +163,6 @@
 
   # Power Management
   services.power-profiles-daemon.enable = true;
-  services.udev.extraRules = ''
-    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}="power-profile-ac.service"
-    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", TAG+="systemd", ENV{SYSTEMD_WANTS}="power-profile-battery.service"
-  '';
 
   systemd.services.power-profile-ac = {
     description = "Set power profile to performance on AC";
@@ -221,7 +225,7 @@
 
   security.pam.services.login.failDelay = {
     enable = true;
-    delay = 4000000; # 4 seconds
+    delay = 0; # Was 4000000 (4 seconds!) — unnecessary on a personal machine
   };
 
   # ── User ───────────────────────────────────────────────────────
@@ -275,7 +279,32 @@
   ];
 
   # ── Fonts ──────────────────────────────────────────────────────
-  # Commonly used fonts for Typst, development, and general use
+  fonts.fontconfig = {
+    enable = true;
+    antialias = true;
+    hinting = {
+      enable = true;
+      style = "slight"; # "slight" preserves shape better than "full"
+      autohint = false; # use font's own hinting instructions
+    };
+    subpixel = {
+      rgba = "rgb"; # set to "bgr" if colors look off on your specific panel
+      lcdfilter = "default";
+    };
+    defaultFonts = {
+      sansSerif = [
+        "Inter"
+        "Noto Sans"
+      ];
+      monospace = [
+        "JetBrainsMono Nerd Font"
+        "FiraCode Nerd Font"
+      ];
+      serif = [ "Libertinus Serif" ];
+      emoji = [ "Noto Color Emoji" ];
+    };
+  };
+
   fonts.packages = with pkgs; [
     # Monospace / Code fonts
     jetbrains-mono
@@ -306,17 +335,41 @@
     corefonts
   ];
 
-  # ── XDG ────────────────────────────────────────────────────────
-  environment.sessionVariables = {
-    XDG_CACHE_HOME = "$HOME/.cache";
-    XDG_CONFIG_HOME = "$HOME/.config";
-    XDG_DATA_HOME = "$HOME/.local/share";
-    XDG_STATE_HOME = "$HOME/.local/state";
+  # ── Hardware & Performance ─────────────────────────────────────
+  hardware.cpu.amd.updateMicrocode = true;
+
+  # AMD iGPU (Offload) Vulkan
+  hardware.amdgpu.amdvlk = {
+    enable = true;
+    support32Bit.enable = true;
   };
+
+  # Automatic process re-nicing for desktop responsiveness
+  services.ananicy = {
+    enable = true;
+    package = pkgs.ananicy-cpp;
+    settings = {
+      cgroup_realtime_workaround = true;
+    };
+  };
+
+  # Advanced I/O Scheduling & Power Management
+  services.udev.extraRules = ''
+    # NVMe: no-op scheduler (drive handles queuing internally)
+    ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="none"
+
+    # SATA SSD (if any): use BFQ for better interactive responsiveness
+    ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="bfq"
+
+    # Power Profile Rules
+    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}="power-profile-ac.service"
+    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", TAG+="systemd", ENV{SYSTEMD_WANTS}="power-profile-battery.service"
+  '';
 
   # ── Swap & Performance ────────────────────────────────────────
   zramSwap = {
     enable = true;
+    algorithm = "zstd"; # Faster and better compression than lzo
     memoryPercent = 50; # Allow up to 50% of RAM to be compressed (great for AI)
   };
 
@@ -325,42 +378,71 @@
     enable = true;
     enableNotifications = true;
     freeMemThreshold = 5; # Kill heaviest process if free RAM drops below 5%
+    freeSwapThreshold = 10;
+    extraArgs = [
+      "-g" # send SIGTERM first
+      "--prefer" "'^(lmstudio|firefox|code-cursor)$'"
+      "--avoid" "'^(kwin|plasmashell|kate|kanata)$'"
+    ];
   };
+
+  # Disable competing default OOM daemon
+  systemd.oomd.enable = false;
+
+  # Thermal management to prevent throttle stutters
+  services.thermald.enable = true;
 
   # ── Nix Settings ──────────────────────────────────────────────
-  nix.settings = {
-    experimental-features = [
-      "nix-command"
-      "flakes"
-    ];
+  nix = {
+    daemonCPUSchedPolicy = "idle";
+    daemonIOSchedClass = "idle";
 
-    # Build
-    max-jobs = "auto";
-    cores = 0;
+    settings = {
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
 
-    # Downloads
-    max-substitution-jobs = 32;
-    http-connections = 64;
-    auto-optimise-store = true;
-    
-    trusted-users = [ "root" "sanskar" ];
+      # Build
+      max-jobs = 4;
+      cores = 4;
 
-    substituters = [
-      "https://cache.nixos.org"
-      "https://nix-community.cachix.org"
-      "https://mirrors.ustc.edu.cn/nix-channels/store"
-    ];
-    trusted-public-keys = [
-      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-    ];
+      # Downloads
+      max-substitution-jobs = 32;
+      http-connections = 64;
+      auto-optimise-store = true;
 
-    stalled-download-timeout = 10;
-    connect-timeout = 5;
+      trusted-users = [
+        "root"
+        "sanskar"
+      ];
+
+      substituters = [
+        "https://cache.nixos.org"
+        "https://nix-community.cachix.org"
+        "https://mirrors.ustc.edu.cn/nix-channels/store"
+      ];
+      trusted-public-keys = [
+        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      ];
+
+      stalled-download-timeout = 10;
+      connect-timeout = 5;
+    };
+
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 14d";
+      persistent = true;
+    };
   };
 
-  nix.gc = {
-    automatic = false;
+  systemd.services.nix-daemon.serviceConfig = {
+    CPUWeight = 20;
+    CPUQuota = "60%";
+    OOMScoreAdjust = 500;
   };
 
   system.stateVersion = "25.11";
