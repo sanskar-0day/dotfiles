@@ -48,6 +48,10 @@
       hmu = "home-manager switch --flake ~/dotfiles#sanskar --update-input nixpkgs";
       nixgc = "sudo nix-collect-garbage -d && nix-collect-garbage -d";
 
+      # ── Development Shells (Project Stacks) ──────────────────────────────
+      ds = "nix develop ~/dotfiles#ds";
+      web = "nix develop ~/dotfiles#web";
+
       # ── Development & GPU ───────────────────────────────────────────────
       nv-run = "nvidia-offload";
       nv-game = "nvidia-offload gamemoderun";
@@ -125,6 +129,16 @@
 
     # External scripts/hooks and main configuration
     initContent = ''
+      # DevShell launcher function
+      dev() {
+        if [ -z "$1" ]; then
+          echo "> Available devShells:"
+          nix flake show ~/dotfiles --json 2>/dev/null | jq -r '.devShells."x86_64-linux" | keys[]'
+        else
+          nix develop ~/dotfiles#"$1"
+        fi
+      }
+
       ${builtins.readFile ./zshrc}
     '';
   };

@@ -97,29 +97,7 @@
 
       # ── Development Shells (Project Stacks) ─────────────────────
       # Access via `nix develop .#<name>`
-      devShells.${system} = {
-        # Data science / IITM stack
-        ds = pkgs.mkShell {
-          packages = with pkgs; [
-            python313
-            python313Packages.numpy
-            python313Packages.pandas
-            python313Packages.jupyterlab
-            python313Packages.matplotlib
-            python313Packages.scikit-learn
-          ];
-        };
-
-        # Web freelancing stack
-        web = pkgs.mkShell {
-          packages = with pkgs; [
-            nodejs_22
-            bun
-            git
-            just
-          ];
-        };
-      };
+      devShells.${system} = import ./devshells/default.nix { inherit pkgs; };
 
       # ── Automated Checks ────────────────────────────────────────
       # `nix flake check` — verifies the config builds before deploying

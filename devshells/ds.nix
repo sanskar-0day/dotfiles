@@ -1,6 +1,6 @@
 # =============================================================================
-#  ds.nix — IITM BS Data Science | MAD 1 (Modern Application Development I)
-#  Course: BSCS2003 | Stack: Python · Flask · SQLite · Jinja2 · JS · Vue · REST
+#  ds.nix — IITM BS Data Science
+#  Stack: Python · Flask · SQLite · Jinja2 · JS · Vue · REST
 # =============================================================================
 
 { pkgs ? import <nixpkgs> { } }:
@@ -137,8 +137,8 @@ pkgs.mkShell {
   shellHook = ''
     echo ""
     echo "╔══════════════════════════════════════════════════════════╗"
-    echo "║   🎓  IITM BS DS — MAD 1 Dev Shell  Ready               ║"
-    echo "║   Flask · SQLite · Jinja2 · Vue · Celery · Redis        ║"
+    echo "║   🎓  IITM BS DS — Ready                                 ║"
+    echo "║   Flask · SQLite · Jinja2 · Vue · Celery · Redis         ║"
     echo "╚══════════════════════════════════════════════════════════╝"
     echo ""
 
