@@ -156,6 +156,7 @@
   services.printing.enable = false;
   services.geoclue2.enable = false;
   services.packagekit.enable = false;
+  systemd.services.ModemManager.enable = false; # Speeds up boot significantly
   services.fstrim.enable = true; # Trim SSD regularly
   services.irqbalance.enable = true;
 
@@ -196,24 +197,6 @@
   # Power Management (using power-profiles-daemon)
   services.power-profiles-daemon.enable = true;
 
-  # Auto-switch profiles on AC/Battery events
-  systemd.services.power-profile-ac = {
-    description = "Set power profile to performance on AC";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.power-profiles-daemon}/bin/powerprofilesctl set performance";
-    };
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.power-profile-battery = {
-    description = "Set power profile to balanced on battery";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.power-profiles-daemon}/bin/powerprofilesctl set balanced";
-    };
-    wantedBy = [ "multi-user.target" ];
-  };
 
   # ── Backups ────────────────────────────────────────────────────
   # Borg Backup: Daily snapshots of critical data
@@ -402,17 +385,13 @@
     };
   };
 
-  # Advanced I/O Scheduling & Power Management
+  # Advanced I/O Scheduling
   services.udev.extraRules = ''
     # NVMe: no-op scheduler (drive handles queuing internally)
     ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="none"
 
     # SATA SSD (if any): use BFQ for better interactive responsiveness
     ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="bfq"
-
-    # Power Profile Rules
-    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}="power-profile-ac.service"
-    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", TAG+="systemd", ENV{SYSTEMD_WANTS}="power-profile-battery.service"
   '';
 
   # ── Swap & Performance ────────────────────────────────────────
@@ -437,9 +416,6 @@
 
   # Disable competing default OOM daemon
   systemd.oomd.enable = false;
-
-  # Thermal management to prevent throttle stutters
-  services.thermald.enable = true;
 
   # ── Nix Settings ──────────────────────────────────────────────
   nix = {
@@ -472,7 +448,6 @@
       substituters = [
         "https://cache.nixos.org"
         "https://nix-community.cachix.org"
-        "https://mirrors.ustc.edu.cn/nix-channels/store"
       ];
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="

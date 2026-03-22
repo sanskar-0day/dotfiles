@@ -13,7 +13,7 @@
       canTouchEfiVariables = true;
       efiSysMountPoint = "/boot";
     };
-    timeout = 1;
+    timeout = 0; # Set to 0 to bypass the menu entirely (hold space or shift during boot to show it)
   };
 
   # ── Safe & Fast Boot ──────────────────────────────────────────
@@ -35,6 +35,8 @@
     "fastboot"
     "noresume"
     "splash"
+    "quiet"
+
     "boot.shell_on_fail"
     "nvidia-drm.modeset=1" # Required for Wayland (if used) and PRIME offload
     "nvidia.NVreg_PreserveVideoMemoryAllocations=1" # Better suspend/resume on NVIDIA
@@ -46,6 +48,12 @@
 
   boot.initrd.compressor = "zstd";
   boot.initrd.compressorArgs = [ "-6" "-T0" ]; # was -19; -6 is 10x faster to build, same decompression speed
+
+  # ── Boot Splash (Plymouth) ───────────────────────────────────
+  boot.plymouth = {
+    enable = true;
+    theme = "breeze";
+  };
 
   # ── Kernel Hardening & Performance ──────────────────────────
   boot.kernel.sysctl = {
@@ -70,8 +78,6 @@
     freeSwapThreshold = 10;
   };
 
-  # Thermald: Prevents thermal throttling stutters
-  services.thermald.enable = true;
 
   # Logind: Opinionated suspend/idle behavior
   services.logind = {

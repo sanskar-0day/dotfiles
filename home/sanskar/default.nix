@@ -26,6 +26,7 @@
     telegram-desktop
     vlc
     freerdp
+    winboat
 
     # ── Desktop & System ──
     kdePackages.spectacle # Screenshots
