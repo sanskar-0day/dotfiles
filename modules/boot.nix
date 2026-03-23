@@ -6,7 +6,7 @@
     systemd-boot = {
       enable = true;
       editor = false; # Security: Prevent kernel parameter editing at boot
-      configurationLimit = 10; # Keep boot partition clean
+      configurationLimit = 5; # Prevent /boot from filling up
       consoleMode = "max";
     };
     efi = {

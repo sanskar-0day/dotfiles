@@ -17,6 +17,7 @@
   ];
 
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.nvidia.acceptLicense = true;
 
   # ── Boot & Kernel ──────────────────────────────────────────────
   boot.kernelPackages = pkgs.linuxPackages_6_12;

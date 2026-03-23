@@ -15,6 +15,7 @@
     steam-run           # Run binaries in the Steam FHS environment
     vulkan-tools
     vulkan-loader
+
   ];
 
   # ── 32-Bit Support ────────────────────────────────────────────
@@ -49,8 +50,27 @@
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
+    localNetworkGameTransfers.openFirewall = true; # LAN game transfers
     gamescopeSession.enable = true; # Micro-compositor for better frame pacing
     extraCompatPackages = [ pkgs.proton-ge-bin ];
+
+  };
+
+  # ── Steam/Proton Stability Environment Variables ──────────────
+  # These are set session-wide so Steam, Lutris, Heroic all benefit.
+  environment.sessionVariables = {
+    # Force Steam to use system libs over its bundled (broken) ones
+    STEAM_RUNTIME_PREFER_HOST_LIBRARIES = "1";
+    # Prevent Steam from fighting Plasma for GPU resources
+    SDL_VIDEODRIVER = "x11";
+    # Force-enable DXVK async shader compilation → prevents stutter-crashes
+    DXVK_ASYNC = "1";
+    # Enable Proton ESync + FSync for lower-latency IPC (prevents deadlock crashes)
+    PROTON_NO_ESYNC = "0";
+    PROTON_NO_FSYNC = "0";
+    # Disable Proton's verbose logging (log spam can cause I/O freezes)
+    PROTON_LOG = "0";
+    DXVK_LOG_LEVEL = "none";
   };
 
   # ── Gamescope ─────────────────────────────────────────────────
