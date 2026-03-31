@@ -136,7 +136,10 @@
     ]
     #v(0.8cm)
     #text(size: 10pt, fill: luma(100), style: "italic")[
-      Complete system documentation — from bootloader to shell prompt
+      NixOS has been a blessing for me. Instead of Dependency Hell of Windows and Arch (occasionally) or the complications of Containers, All i need to do now  is define a shell.nix file in a folder and Kaboom!! \
+      Zsh autodetects and runs `nix-shell` and all  tools i need are loaded perfectly 
+
+This is my flakes based configuration for NixOS.
     ]
   ]
 
@@ -194,6 +197,8 @@
 = Philosophy & Design
 
 I started using NixOS because I was frustrated with the fragility of traditional Linux setups. Every few months, something would break after an update — a driver mismatch, a config overwritten by a package manager, a library conflict that cascaded into three hours of debugging. NixOS eliminates that entire class of problems by making the system declarative and atomic.
+
+Containers are morbidly complex and annoying to deal with and i despise  any solution that will force more than a single file on my setup for defining req. packages.
 
 This configuration has evolved over the past year from a single `configuration.nix` into a modular, flake-based setup. Every decision documented here was the result of actually hitting a problem and solving it — not cargo-culting from someone else's dotfiles.
 

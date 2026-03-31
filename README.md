@@ -1,5 +1,10 @@
 # Sanskar's NixOS Dotfiles
 
+
+> NixOS has been a blessing for me. Instead of Dependency Hell of Windows and sometimes in Arch or the complications of Containers, All i need to do now  is define a shell.nix file in a folder and Kaboom!! zsh autodetects and runs `nix-shell` and all  packages (even  gui ones!!!! ) i need are loaded perfectly .
+
+This is my flakes based configuration for NixOS.
+
 > My entire operating system, declaratively — from the bootloader to the shell prompt.
 > One repo, one command, identical machines every time.
 
