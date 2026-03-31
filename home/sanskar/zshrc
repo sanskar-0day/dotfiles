@@ -98,6 +98,25 @@ if command -v direnv &>/dev/null; then
   eval "$(direnv hook zsh)"
 fi
 
+# Auto-activate shell.nix on directory change
+# When you cd into a project with a shell.nix, this drops you into
+# the nix-shell automatically. Tracks the current shell.nix directory
+# so it won't re-enter if you're already inside.
+_nixshell_chpwd() {
+  # Skip if we're already inside a nix-shell for this directory
+  [[ "$_NIXSHELL_DIR" == "$PWD" ]] && return
+
+  if [[ -f "./shell.nix" && -z "$IN_NIX_SHELL" ]]; then
+    echo "\e[1;34m󱄅  shell.nix detected\e[0m — entering nix-shell..."
+    export _NIXSHELL_DIR="$PWD"
+    nix-shell
+    # Clear tracker when we exit the shell
+    unset _NIXSHELL_DIR
+  fi
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook chpwd _nixshell_chpwd
+
 # ── Helper Functions ─────────────────────────────────────────────────────────
 
 # WiFi driver toggle (external RTL8822BU ↔ internal MediaTek)
